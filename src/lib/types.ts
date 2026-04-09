@@ -1,0 +1,73 @@
+export interface Dataset {
+  id: string;
+  name: string;
+  rows: number;
+  columns: string[];
+  data: Record<string, any>[];
+  uploadedAt: Date;
+  targetVariable?: string;
+  sensitiveAttributes?: string[];
+}
+
+export interface FairnessMetrics {
+  demographicParity: number;
+  equalOpportunity: number;
+  disparateImpact: number;
+  overallScore: number;
+}
+
+export interface GroupMetric {
+  group: string;
+  positiveRate: number;
+  count: number;
+  truePositiveRate?: number;
+}
+
+export interface BiasAnalysis {
+  id: string;
+  datasetId: string;
+  metrics: FairnessMetrics;
+  groupMetrics: GroupMetric[];
+  sensitiveAttribute: string;
+  targetVariable: string;
+  featureImportance: FeatureImportance[];
+  correlations: Correlation[];
+  timestamp: Date;
+}
+
+export interface FeatureImportance {
+  feature: string;
+  importance: number;
+  isProxy: boolean;
+}
+
+export interface Correlation {
+  feature: string;
+  correlation: number;
+}
+
+export interface SimulationScenario {
+  id: string;
+  name: string;
+  removedFeatures: string[];
+  reweighted: boolean;
+  metrics: FairnessMetrics;
+  groupMetrics: GroupMetric[];
+}
+
+export interface MitigationStrategy {
+  id: string;
+  name: string;
+  description: string;
+  type: 'reweighting' | 'feature_removal' | 'adversarial';
+  impact: number; // expected improvement
+}
+
+export type UserRole = 'admin' | 'analyst' | 'public';
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+}
