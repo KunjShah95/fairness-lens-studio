@@ -10,6 +10,7 @@ import UploadPage from "./pages/UploadPage";
 import AnalysisPage from "./pages/AnalysisPage";
 import SimulatorPage from "./pages/SimulatorPage";
 import TransparencyPage from "./pages/TransparencyPage";
+import PortalPage from "./pages/PortalPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/analysis" element={<AnalysisPage />} />
           <Route path="/simulator" element={<SimulatorPage />} />
           <Route path="/transparency" element={<TransparencyPage />} />
+          <Route path="/portal" element={<PortalPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
