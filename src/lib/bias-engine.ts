@@ -1,4 +1,4 @@
-import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, FeatureImportance, Correlation, SimulationScenario } from './types';
+import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, FeatureImportance, Correlation, SimulationScenario, MitigationStrategy } from './types';
 
 function getUniqueValues(data: Record<string, unknown>[], col: string): string[] {
   return [...new Set(data.map(r => String(r[col])))].filter(Boolean);
@@ -130,7 +130,7 @@ export function runSimulation(dataset: Dataset, analysis: BiasAnalysis, removedF
   };
 }
 
-export function getMitigationStrategies(analysis: BiasAnalysis) {
+export function getMitigationStrategies(analysis: BiasAnalysis): MitigationStrategy[] {
   const proxyFeatures = analysis.featureImportance.filter(f => f.isProxy);
   return [
     {

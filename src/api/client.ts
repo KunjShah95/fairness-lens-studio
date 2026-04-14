@@ -1,4 +1,4 @@
-import type { JsonValue } from '@/lib/types';
+import type { JsonValue, MitigationType } from '@/lib/types';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -78,7 +78,7 @@ export class ApiClient {
     });
   }
 
-  static getPopulationImpact(auditId: string, intervention = 'reweighting') {
+  static getPopulationImpact(auditId: string, intervention: MitigationType = 'reweighting') {
     return this.request('POST', '/api/simulator/population-impact', {
       audit_id: auditId,
       intervention,

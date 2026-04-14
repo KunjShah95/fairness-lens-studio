@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Loader, TrendingUp, Zap, Users, Lightbulb, ArrowRight } from "lucide-react";
 import { ApiClient } from "@/api/client";
-import type { JsonValue } from "@/lib/types";
+import type { JsonValue, MitigationType } from "@/lib/types";
 
 interface Counterfactual {
   id: number;
@@ -85,7 +85,7 @@ export function SimulatorPage() {
     }
   };
 
-  const estimatePopulationImpact = async (intervention: string = "reweighting") => {
+  const estimatePopulationImpact = async (intervention: MitigationType = "reweighting") => {
     try {
       setPopulationLoading(true);
       const result = await ApiClient.getPopulationImpact(auditId!, intervention);
@@ -240,7 +240,7 @@ export function SimulatorPage() {
 
           {/* Impact Intervention Selector */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            {["reweighting", "feature_removal", "adversarial"].map((intervention) => (
+            {(["reweighting", "feature_removal", "adversarial"] as MitigationType[]).map((intervention) => (
               <button
                 key={intervention}
                 onClick={() => estimatePopulationImpact(intervention)}

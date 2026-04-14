@@ -11,7 +11,7 @@ export interface Dataset {
   name: string;
   rows: number;
   columns: string[];
-  data: Record<string, JsonValue>[];
+  data: Record<string, unknown>[];
   uploadedAt: Date;
   targetVariable?: string;
   sensitiveAttributes?: string[];
@@ -70,6 +70,8 @@ export interface MitigationStrategy {
   type: 'reweighting' | 'feature_removal' | 'adversarial';
   impact: number; // expected improvement
 }
+
+export type MitigationType = MitigationStrategy['type'];
 
 export type UserRole = 'admin' | 'analyst' | 'public' | 'compliance' | 'executive' | 'other' | string;
 
