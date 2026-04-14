@@ -28,17 +28,14 @@ app = FastAPI(
 )
 
 # Add CORS middleware
+cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # React dev servers
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Create database tables
-logger.info("Creating database tables...")
-Base.metadata.create_all(bind=engine)
 
 # Register routers
 app.include_router(datasets.router)
@@ -56,6 +53,12 @@ async def startup():
     logger.info(f"Starting EquityLens API in {settings.environment} mode")
     logger.info(f"Database: {settings.database_url}")
     logger.info(f"Redis: {settings.redis_url}")
+    try:
+        logger.info("Creating database tables...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables ready")
+    except Exception as exc:
+        logger.warning(f"Database initialization skipped/unavailable: {exc}")
 
 @app.on_event("shutdown")
 async def shutdown():

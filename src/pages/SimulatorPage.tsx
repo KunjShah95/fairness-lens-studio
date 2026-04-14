@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Loader, TrendingUp, Zap, Users, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader, TrendingUp, Zap, Users, Lightbulb, ArrowRight } from "lucide-react";
 import { ApiClient } from "@/api/client";
+import type { JsonValue } from "@/lib/types";
 
 interface Counterfactual {
   id: number;
   changes: Record<string, { from: number; to: number; change: number }>;
   total_distance: number;
   feasibility_score: number;
-  profile: Record<string, any>;
+  profile: Record<string, JsonValue>;
 }
 
 interface PopulationImpactGroup {
@@ -25,7 +27,7 @@ interface PopulationImpactGroup {
 }
 
 interface ScenarioResult {
-  scenario: { type: string; params: Record<string, any> };
+  scenario: { type: string; params: Record<string, JsonValue> };
   before: {
     overall_approval_rate: number;
     feature_count: number;
@@ -40,6 +42,18 @@ interface ScenarioResult {
   recommendation: string | null;
 }
 
+interface PopulationImpactByAttribute {
+  groups: PopulationImpactGroup[];
+}
+
+interface PopulationImpactResult {
+  total_population?: number;
+  total_newly_approved?: number;
+  impact_percentage?: number;
+  by_attribute?: Record<string, PopulationImpactByAttribute>;
+  error?: string;
+}
+
 export function SimulatorPage() {
   const [searchParams] = useSearchParams();
   const auditId = searchParams.get("audit_id");
@@ -47,16 +61,16 @@ export function SimulatorPage() {
   const [counterfactualsLoading, setCounterfactualsLoading] = useState(false);
   const [counterfactuals, setCounterfactuals] = useState<Counterfactual[] | null>(null);
   const [populationLoading, setPopulationLoading] = useState(false);
-  const [populationImpact, setPopulationImpact] = useState<any>(null);
+  const [populationImpact, setPopulationImpact] = useState<PopulationImpactResult | null>(null);
   const [scenarioLoading, setScenarioLoading] = useState(false);
   const [scenarioResults, setScenarioResults] = useState<ScenarioResult | null>(null);
   const [error, setError] = useState("");
 
-  const [queryInstance, setQueryInstance] = useState<Record<string, number>>({
+  const [queryInstance, setQueryInstance] = useState<Record<string, JsonValue>>({
     age: 35,
-    income: 50000,
-    credit_score: 680,
-    years_employed: 5,
+    symptom_severity: 7,
+    comorbidity_index: 2,
+    prior_visit_count: 3,
   });
 
   const generateCounterfactuals = async () => {
@@ -83,7 +97,7 @@ export function SimulatorPage() {
     }
   };
 
-  const runScenario = async (scenarioType: string, params: Record<string, any>) => {
+  const runScenario = async (scenarioType: string, params: Record<string, JsonValue>) => {
     try {
       setScenarioLoading(true);
       const result = await ApiClient.modelScenario(auditId!, scenarioType, params);
@@ -97,10 +111,11 @@ export function SimulatorPage() {
 
   if (!auditId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
-        <Card className="max-w-2xl mx-auto p-6">
-          <AlertCircle className="text-red-600 mb-4" size={32} />
-          <p className="text-gray-700 font-semibold">No audit selected</p>
+      <div className="min-h-screen">
+        <div className="fixed inset-0 -z-10 bg-background" />
+        <Card className="card-warm max-w-2xl mx-auto p-6 border-border/30">
+          <AlertCircle className="text-destructive mb-4 w-8 h-8" />
+          <p className="text-foreground font-display font-semibold">No audit selected</p>
           <p className="text-sm text-gray-500 mt-2">Go back to the analysis page and select an audit to use the simulator.</p>
         </Card>
       </div>
@@ -108,13 +123,13 @@ export function SimulatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Fairness Simulator</h1>
           <p className="text-gray-600">
-            Explore counterfactual scenarios, estimate population impact, and model what-if interventions.
+            Explore counterfactual care scenarios, estimate population impact, and model what-if interventions.
           </p>
         </div>
 
@@ -133,23 +148,23 @@ export function SimulatorPage() {
             <h2 className="text-2xl font-bold text-gray-900">Counterfactual Explanations</h2>
           </div>
           <p className="text-sm text-gray-600 mb-6">
-            Discover the minimum feature changes needed to flip a decision from denied to approved. Enter a person's profile and explore alternative scenarios.
+            Discover the minimum feature changes needed to move a patient from deferred care to prioritized care. Enter a patient profile and explore alternative scenarios.
           </p>
 
           {/* Query Instance Input */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-            <p className="font-semibold text-gray-900 mb-3">Person's Profile</p>
+              <p className="font-semibold text-gray-900 mb-3">Patient Profile</p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(queryInstance).map(([key, value]) => (
+{Object.entries(queryInstance).map(([key, value]) => (
                 <div key={key}>
-                  <label className="text-xs font-medium text-gray-700 uppercase">{key}</label>
+                  <label className='text-xs font-medium text-gray-700 uppercase'>{key}</label>
                   <input
-                    type="number"
-                    value={value}
+                    type='number'
+                    value={value as number}
                     onChange={(e) =>
                       setQueryInstance({ ...queryInstance, [key]: Number(e.target.value) })
                     }
-                    className="w-full px-2 py-1 border border-gray-300 rounded mt-1 text-sm"
+                    className='w-full px-2 py-1 border border-gray-300 rounded mt-1 text-sm'
                   />
                 </div>
               ))}
@@ -205,7 +220,7 @@ export function SimulatorPage() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs text-gray-600">No changes needed (already approved)</p>
+                    <p className="text-xs text-gray-600">No changes needed (already prioritized)</p>
                   )}
                 </div>
               ))}
@@ -247,7 +262,7 @@ export function SimulatorPage() {
                     <p className="text-2xl font-bold text-green-600">{populationImpact.total_population?.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 uppercase font-medium">Newly Approved</p>
+                    <p className="text-xs text-gray-600 uppercase font-medium">Newly Prioritized</p>
                     <p className="text-2xl font-bold text-green-600">+{populationImpact.total_newly_approved?.toLocaleString()}</p>
                   </div>
                   <div>
@@ -260,7 +275,7 @@ export function SimulatorPage() {
               {/* By Attribute Breakdown */}
               {populationImpact.by_attribute && (
                 <div className="space-y-4">
-                  {Object.entries(populationImpact.by_attribute).map(([attr, data]: [string, any]) => (
+                  {Object.entries(populationImpact.by_attribute).map(([attr, data]) => (
                     <div key={attr} className="p-4 rounded-lg border border-green-200">
                       <p className="font-semibold text-gray-900 mb-3">{attr}</p>
                       <div className="space-y-2">
@@ -271,7 +286,7 @@ export function SimulatorPage() {
                               <p className="text-xs text-gray-600">
                                 {(group.approval_rate_before * 100).toFixed(0)}% → {(group.approval_rate_after * 100).toFixed(0)}%
                               </p>
-                              <p className="font-semibold text-green-600">+{group.newly_approved}</p>
+                              <p className="font-semibold text-green-600">+{group.newly_approved} prioritized</p>
                             </div>
                           </div>
                         ))}
@@ -303,7 +318,7 @@ export function SimulatorPage() {
               className="p-4 rounded-lg border-2 border-purple-200 bg-purple-50 hover:bg-purple-100 disabled:bg-gray-200 text-left"
             >
               <p className="font-semibold text-gray-900 text-sm">Remove Proxy Feature</p>
-              <p className="text-xs text-gray-600 mt-1">Remove postal_code (known proxy)</p>
+              <p className="text-xs text-gray-600 mt-1">Remove postal_code (known access proxy)</p>
             </button>
 
             {/* Balance Groups */}
@@ -322,8 +337,8 @@ export function SimulatorPage() {
               disabled={scenarioLoading}
               className="p-4 rounded-lg border-2 border-purple-200 bg-purple-50 hover:bg-purple-100 disabled:bg-gray-200 text-left"
             >
-              <p className="font-semibold text-gray-900 text-sm">Lower Approval Threshold</p>
-              <p className="text-xs text-gray-600 mt-1">More lenient decision boundary</p>
+              <p className="font-semibold text-gray-900 text-sm">Lower Prioritization Threshold</p>
+              <p className="text-xs text-gray-600 mt-1">More inclusive clinical decision boundary</p>
             </button>
           </div>
 
@@ -359,104 +374,5 @@ export function SimulatorPage() {
     </div>
   );
 }
-        <h1 className="text-3xl font-display font-bold text-foreground flex items-center gap-3">
-          <Eye className="w-8 h-8 text-accent" />
-          Human Impact Simulator
-        </h1>
-        <p className="text-muted-foreground mt-1">Simulate "what-if" scenarios and see how changes affect outcomes</p>
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Controls */}
-        <Card className="shadow-card">
-          <CardHeader>
-            <CardTitle className="text-base">Scenario Configuration</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-foreground mb-3">Remove Features</p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {features.map(f => (
-                  <label key={f} className="flex items-center gap-2 cursor-pointer text-sm">
-                    <Checkbox checked={removedFeatures.includes(f)} onCheckedChange={() => toggleFeature(f)} />
-                    <span className={removedFeatures.includes(f) ? 'line-through text-muted-foreground' : 'text-foreground'}>{f}</span>
-                    {currentAnalysis.featureImportance.find(fi => fi.feature === f)?.isProxy && (
-                      <span className="text-[10px] bg-destructive/10 text-destructive px-1.5 py-0.5 rounded">proxy</span>
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-border">
-              <span className="text-sm font-medium text-foreground">Apply Reweighting</span>
-              <Switch checked={reweighted} onCheckedChange={setReweighted} />
-            </div>
-
-            <div className="flex gap-2 pt-2">
-              <Button onClick={handleSimulate} className="flex-1 gap-2 gradient-primary text-primary-foreground">
-                <Play className="w-4 h-4" /> Simulate
-              </Button>
-              <Button variant="outline" size="icon" onClick={() => { clearSimulations(); setRemovedFeatures([]); setReweighted(false); }}>
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Results */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Score comparison */}
-          <div className="flex flex-wrap gap-4">
-            <Card className="shadow-card flex-1 min-w-[150px] flex flex-col items-center py-6">
-              <p className="text-xs text-muted-foreground mb-2">Original</p>
-              <FairnessGauge score={currentAnalysis.metrics.overallScore} size={120} />
-            </Card>
-            {simulations.map((sim, i) => (
-              <Card key={sim.id} className="shadow-card flex-1 min-w-[150px] flex flex-col items-center py-6">
-                <p className="text-xs text-muted-foreground mb-2 text-center">Scenario {i + 1}</p>
-                <FairnessGauge score={sim.metrics.overallScore} size={120} />
-                <p className="text-[10px] text-muted-foreground mt-2 text-center max-w-[140px] truncate">{sim.name}</p>
-              </Card>
-            ))}
-          </div>
-
-          {/* Group comparison chart */}
-          {simulations.length > 0 && (
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="text-base">Group Outcome Comparison</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={comparisonData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="group" tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                    <YAxis domain={[0, 1]} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
-                    <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                    <Legend />
-                    <Bar dataKey="original" name="Original" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
-                    {simulations.map((_, i) => (
-                      <Bar key={i} dataKey={`sim_${i}`} name={`Scenario ${i + 1}`} fill={`hsl(${217 + i * 45}, 80%, 60%)`} radius={[4, 4, 0, 0]} />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          {simulations.length === 0 && (
-            <Card className="shadow-card">
-              <CardContent className="py-16 text-center">
-                <Eye className="w-12 h-12 mx-auto mb-4 text-muted-foreground/40" />
-                <p className="text-muted-foreground">Configure a scenario and click "Simulate" to see the impact</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default SimulatorPage;

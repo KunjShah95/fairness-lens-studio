@@ -1,5 +1,6 @@
 import os
 from pydantic_settings import BaseSettings
+from pydantic_settings import SettingsConfigDict
 
 class Settings(BaseSettings):
     """Load configuration from environment variables."""
@@ -15,6 +16,7 @@ class Settings(BaseSettings):
     debug: bool = True
     api_host: str = "0.0.0.0"
     api_port: int = 8000
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:8080"
     
     # Storage
     upload_dir: str = "./uploads"
@@ -27,9 +29,11 @@ class Settings(BaseSettings):
     # Environment
     environment: str = "development"
     
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+        extra="ignore",
+    )
 
 settings = Settings()
 

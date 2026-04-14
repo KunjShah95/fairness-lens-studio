@@ -1,18 +1,46 @@
 import React, { useState } from 'react';
-import { AlertCircle, CheckCircle2, Info, MessageSquare, Send } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Info, MessageSquare, Send, Heart, Shield, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import ApiClient from '@/api/client';
+import { ApiClient } from '@/api/client';
+import { ThemeToggle } from '@/components/ThemeToggle';
+
+interface KeyFactor {
+  feature: string;
+  importance: string;
+  your_value: string | number;
+}
+
+interface BiasRiskFactor {
+  feature: string;
+  note: string;
+}
+
+interface CounterfactualPath {
+  scenario: string;
+  changes: string[];
+  outcome: string;
+  feasibility: string;
+}
+
+interface PortalExplanationResult {
+  valid?: boolean;
+  error?: string;
+  decision_summary?: string;
+  key_factors?: KeyFactor[];
+  bias_risk_factors?: BiasRiskFactor[];
+  counterfactual_paths?: CounterfactualPath[];
+}
 
 interface PortalState {
   step: 'input' | 'explanation' | 'appeal' | 'confirmation';
   auditId: string;
   profile: Record<string, number>;
-  explanationResult: any;
+  explanationResult: PortalExplanationResult | null;
   loading: boolean;
   error: string | null;
   appealSubmitted: boolean;
@@ -21,13 +49,14 @@ interface PortalState {
 
 export default function PortalPage() {
   const [state, setState] = useState<PortalState>({
+    // Warm background
     step: 'input',
     auditId: '',
     profile: {
       age: 0,
-      income: 0,
-      credit_score: 0,
-      employment_years: 0,
+      symptom_severity: 0,
+      comorbidity_index: 0,
+      prior_visit_count: 0,
     },
     explanationResult: null,
     loading: false,
@@ -70,7 +99,7 @@ export default function PortalPage() {
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
-      const result = await ApiClient.portalExplain(state.auditId, state.profile);
+      const result = (await ApiClient.portalExplain(state.auditId, state.profile)) as PortalExplanationResult;
       setState(prev => ({
         ...prev,
         explanationResult: result,
@@ -78,10 +107,11 @@ export default function PortalPage() {
         error: result.error || null,
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to get explanation';
       setState(prev => ({
         ...prev,
-        error: error.message || 'Failed to get explanation',
+        error: errorMessage,
         loading: false,
       }));
     }
@@ -115,10 +145,11 @@ export default function PortalPage() {
         step: 'confirmation',
         loading: false,
       }));
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to submit appeal';
       setState(prev => ({
         ...prev,
-        error: error.message || 'Failed to submit appeal',
+        error: errorMessage,
         loading: false,
       }));
     }
@@ -130,7 +161,7 @@ export default function PortalPage() {
       ...prev,
       step: 'input',
       auditId: '',
-      profile: { age: 0, income: 0, credit_score: 0, employment_years: 0 },
+      profile: { age: 0, symptom_severity: 0, comorbidity_index: 0, prior_visit_count: 0 },
       explanationResult: null,
       error: null,
       appealSubmitted: false,
@@ -140,14 +171,18 @@ export default function PortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen">
+      <div className="fixed inset-0 -z-10 bg-background" />
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-slate-900">Decision Appeal Portal</h1>
-          <p className="text-slate-600 mt-2">
-            Understand your decision and appeal if you believe it was unfair
-          </p>
+      <div className="bg-background border-b">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Care Decision Appeal Portal</h1>
+            <p className="text-muted-foreground mt-2">
+              Understand your care prioritization decision and appeal if you believe it was unfair
+            </p>
+          </div>
+          <ThemeToggle className="rounded-full" />
         </div>
       </div>
 
@@ -158,7 +193,7 @@ export default function PortalPage() {
             <CardHeader>
               <CardTitle>Your Profile</CardTitle>
               <CardDescription>
-                Enter your profile details to receive an explanation of the decision
+                Enter your profile details to receive an explanation of the care decision
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -180,7 +215,7 @@ export default function PortalPage() {
                     className="mt-1"
                   />
                   <p className="text-xs text-slate-500 mt-1">
-                    This was provided when your application was reviewed
+                    This was provided when your care case was reviewed
                   </p>
                 </div>
 
@@ -197,35 +232,35 @@ export default function PortalPage() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="income">Annual Income ($)</Label>
+                    <Label htmlFor="symptom_severity">Symptom Severity (1-10)</Label>
                     <Input
-                      id="income"
+                      id="symptom_severity"
                       type="number"
-                      placeholder="Annual income"
-                      value={state.profile.income || ''}
-                      onChange={(e) => handleProfileChange('income', e.target.value)}
+                      placeholder="Current symptom severity"
+                      value={state.profile.symptom_severity || ''}
+                      onChange={(e) => handleProfileChange('symptom_severity', e.target.value)}
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="credit_score">Credit Score</Label>
+                    <Label htmlFor="comorbidity_index">Comorbidity Index</Label>
                     <Input
-                      id="credit_score"
+                      id="comorbidity_index"
                       type="number"
-                      placeholder="Credit score"
-                      value={state.profile.credit_score || ''}
-                      onChange={(e) => handleProfileChange('credit_score', e.target.value)}
+                      placeholder="Comorbidity burden score"
+                      value={state.profile.comorbidity_index || ''}
+                      onChange={(e) => handleProfileChange('comorbidity_index', e.target.value)}
                       className="mt-1"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="employment_years">Years Employed</Label>
+                    <Label htmlFor="prior_visit_count">Prior Visit Count</Label>
                     <Input
-                      id="employment_years"
+                      id="prior_visit_count"
                       type="number"
-                      placeholder="Years employed"
-                      value={state.profile.employment_years || ''}
-                      onChange={(e) => handleProfileChange('employment_years', e.target.value)}
+                      placeholder="Visits in last 12 months"
+                      value={state.profile.prior_visit_count || ''}
+                      onChange={(e) => handleProfileChange('prior_visit_count', e.target.value)}
                       className="mt-1"
                     />
                   </div>
@@ -246,7 +281,7 @@ export default function PortalPage() {
                 className="w-full"
                 size="lg"
               >
-                {state.loading ? 'Analyzing...' : 'Get Explanation'}
+                {state.loading ? 'Analyzing...' : 'Get Care Decision Explanation'}
               </Button>
             </CardContent>
           </Card>
@@ -271,12 +306,12 @@ export default function PortalPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">🎯 Key Factors in Your Decision</CardTitle>
                   <CardDescription>
-                    These features had the strongest influence on the outcome
+                    These features had the strongest influence on the care outcome
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {state.explanationResult.key_factors.map((factor: any, idx: number) => (
+                    {state.explanationResult.key_factors.map((factor, idx: number) => (
                       <div key={idx} className="border rounded-lg p-3 bg-slate-50">
                         <div className="flex justify-between items-start mb-1">
                           <span className="font-semibold text-slate-900">
@@ -305,7 +340,7 @@ export default function PortalPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {state.explanationResult.bias_risk_factors.map((risk: any, idx: number) => (
+                    {state.explanationResult.bias_risk_factors.map((risk, idx: number) => (
                       <div key={idx} className="border-l-4 border-orange-400 pl-4 py-2">
                         <p className="font-semibold text-slate-900">{risk.feature}</p>
                         <p className="text-sm text-slate-600 mt-1">{risk.note}</p>
@@ -322,12 +357,12 @@ export default function PortalPage() {
                 <CardHeader>
                   <CardTitle className="text-green-900 text-lg">✨ What Could Change the Outcome</CardTitle>
                   <CardDescription className="text-green-800">
-                    Here's what would be different if you had applied with these changes
+                    Here's what would be different if your profile factors changed
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {state.explanationResult.counterfactual_paths.map((cf: any, idx: number) => (
+                    {state.explanationResult.counterfactual_paths.map((cf, idx: number) => (
                       <div key={idx} className="border rounded-lg p-4 bg-white">
                         <p className="font-semibold text-slate-900 mb-2">{cf.scenario}</p>
                         <ul className="space-y-1 mb-3">
@@ -381,7 +416,7 @@ export default function PortalPage() {
             <CardHeader>
               <CardTitle>File Your Appeal</CardTitle>
               <CardDescription>
-                Explain why you believe the decision was unfair. Our review team will examine your case
+                Explain why you believe the care decision was unfair. Our review team will examine your case
                 within 3-5 business days.
               </CardDescription>
             </CardHeader>

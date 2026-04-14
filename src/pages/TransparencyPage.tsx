@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 
-const CHART_COLORS = ['hsl(217, 91%, 60%)', 'hsl(262, 83%, 58%)', 'hsl(142, 76%, 36%)', 'hsl(38, 92%, 50%)', 'hsl(0, 84%, 60%)'];
+const CHART_COLORS = ['hsl(15, 55%, 54%)', 'hsl(150, 20%, 46%)', 'hsl(35, 45%, 60%)', 'hsl(25, 40%, 65%)', 'hsl(0, 65%, 50%)'];
 
 interface DashboardData {
   audit_id: string;
@@ -130,14 +130,14 @@ const TransparencyPage: React.FC = () => {
             </style>
           </head>
           <body>
-            <h1>Fairness Audit Report</h1>
+            <h1>Healthcare Fairness Audit Report</h1>
             <p><strong>Dataset:</strong> ${currentDataset?.name || 'Unknown'}</p>
             <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
             <div class="metric">
               <strong>Fairness Score:</strong> <span class="score">${dashboardData.fairness_score}/100</span>
             </div>
             <h2>Executive Summary</h2>
-            <p>This audit report evaluates the fairness of the decision-making model on the provided dataset.</p>
+            <p>This audit report evaluates fairness in healthcare decision support on the provided dataset.</p>
             <h2>Key Metrics</h2>
             <p>Demographic Parity: ${(currentAnalysis?.metrics.demographicParity * 100).toFixed(1)}%</p>
             <p>Equal Opportunity: ${(currentAnalysis?.metrics.equalOpportunity * 100).toFixed(1)}%</p>
@@ -159,21 +159,21 @@ const TransparencyPage: React.FC = () => {
     setLoading(true);
     try {
       // In production, this would call: GET /api/reports/model-card-markdown/{audit_id}
-      const mockCard = `# Model Card: Decision Model v1.0
+      const mockCard = `# Model Card: Clinical Decision Support Model v1.0
 
 ## Model Details
-- **Name**: Decision Model v1.0
+    - **Name**: Clinical Decision Support Model v1.0
 - **Type**: Classification
 - **Organization**: EquityLens
 - **Date**: ${new Date().toLocaleDateString()}
 
 ## Intended Use
-This model is designed to make fair and transparent decisions across multiple domains.
+This model is designed to support fair and transparent healthcare decisions.
 
 ### Primary Use Cases
-- Lending: Loan approval decisions
-- Hiring: Candidate screening
-- Healthcare: Risk assessment
+- Patient triage support
+- Treatment prioritization
+- Prior authorization review
 
 ## Model Limitations
 - **Fairness**: May have disparate impact on certain groups
@@ -422,7 +422,7 @@ This model is designed to make fair and transparent decisions across multiple do
           {reportHTML ? (
             <Card className="shadow-card">
               <CardHeader>
-                <CardTitle>Bias Audit Report</CardTitle>
+                <CardTitle>Clinical Fairness Audit Report</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="border border-border rounded-lg p-6 bg-white" dangerouslySetInnerHTML={{ __html: reportHTML }} />

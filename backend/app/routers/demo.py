@@ -64,12 +64,12 @@ async def get_sample_audit():
         },
         "proxy_features": [
             {
-                "feature": "employment_years",
+                "feature": "zip_code",
                 "correlation": 0.67,
                 "severity": "HIGH"
             },
             {
-                "feature": "education_level",
+                "feature": "insurance_plan_tier",
                 "correlation": 0.52,
                 "severity": "MEDIUM"
             }
@@ -96,31 +96,31 @@ async def get_sample_audit():
         ],
         "feature_importance": [
             {
-                "feature": "income",
+                "feature": "age",
                 "importance": 0.28
             },
             {
-                "feature": "credit_score",
+                "feature": "symptom_severity",
                 "importance": 0.24
             },
             {
-                "feature": "employment_years",
+                "feature": "zip_code",
                 "importance": 0.18
             },
             {
-                "feature": "age_group",
+                "feature": "insurance_plan_tier",
                 "importance": 0.14
             },
             {
-                "feature": "debt_ratio",
+                "feature": "prior_visit_count",
                 "importance": 0.10
             }
         ],
         "causal_analysis": {
-            "treatment": "gender",
-            "outcome": "loan_approval",
+            "treatment": "zip_code",
+            "outcome": "triage_priority",
             "ate": 0.15,
-            "interpretation": "Being female reduces loan approval probability by 15% on average"
+            "interpretation": "Patients in certain zip codes receive lower triage priority on average"
         }
     }
 
@@ -254,7 +254,7 @@ async def get_sample_report():
         <body>
             <div class="container">
                 <h1>🔍 Fairness Audit Report</h1>
-                <p><strong>Dataset:</strong> Loan Approval Decisions</p>
+                <p><strong>Dataset:</strong> Healthcare Triage Decisions</p>
                 <p><strong>Generated:</strong> April 12, 2026</p>
 
                 <div class="score-section">
@@ -265,9 +265,9 @@ async def get_sample_report():
 
                 <h2>Executive Summary</h2>
                 <p>
-                    This audit evaluated the fairness of the loan approval decision model. 
-                    The analysis revealed <strong>moderate fairness concerns</strong> related to the protected attribute "gender".
-                    Significant disparities were found in approval rates, particularly for female applicants aged 25-34.
+                    This audit evaluated the fairness of a healthcare triage decision model. 
+                    The analysis revealed <strong>moderate fairness concerns</strong> related to the protected attribute "zip_code".
+                    Significant disparities were found in triage priority, particularly for patients from underserved neighborhoods.
                 </p>
 
                 <h2>Key Metrics by Protected Attribute</h2>
@@ -282,7 +282,7 @@ async def get_sample_report():
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Gender</td>
+                            <td>Zip Code</td>
                             <td>-15.0%</td>
                             <td>-12.0%</td>
                             <td><span class="flag-high">⚠️ FLAGGED</span></td>
@@ -298,39 +298,39 @@ async def get_sample_report():
 
                 <h2>Proxy Features Detected</h2>
                 <p>
-                    The following features may serve as proxies for protected attributes and could amplify bias:
+                    The following features may serve as proxies for protected attributes and could amplify bias in care decisions:
                 </p>
                 <ul>
-                    <li><strong>Employment Years</strong> (67% correlation with gender) - <span class="flag-high">HIGH</span></li>
-                    <li><strong>Education Level</strong> (52% correlation with gender) - <span class="flag-medium">MEDIUM</span></li>
+                    <li><strong>Zip Code</strong> (67% correlation with access) - <span class="flag-high">HIGH</span></li>
+                    <li><strong>Insurance Plan Tier</strong> (52% correlation with access) - <span class="flag-medium">MEDIUM</span></li>
                 </ul>
 
                 <h2>Intersectional Analysis</h2>
-                <p>Approval rates by intersectional groups (worst disparity first):</p>
+                <p>Care prioritization rates by intersectional groups (worst disparity first):</p>
                 <table>
                     <thead>
                         <tr>
                             <th>Group</th>
                             <th>Count</th>
-                            <th>Approval Rate</th>
+                            <th>Prioritization Rate</th>
                             <th>Disparity</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Female, 25-34</td>
+                            <td>Underserved Neighborhood, High Acuity</td>
                             <td>145</td>
                             <td>62%</td>
                             <td><span class="flag-high">-18%</span></td>
                         </tr>
                         <tr>
-                            <td>Female, 35-44</td>
+                            <td>Underserved Neighborhood, Medium Acuity</td>
                             <td>132</td>
                             <td>68%</td>
                             <td><span class="flag-medium">-12%</span></td>
                         </tr>
                         <tr>
-                            <td>Male, 25-34</td>
+                            <td>Control Group, High Acuity</td>
                             <td>168</td>
                             <td>80%</td>
                             <td><span class="flag-low">Baseline</span></td>
@@ -341,29 +341,29 @@ async def get_sample_report():
                 <h2>Feature Importance (Top 5)</h2>
                 <div class="metric-grid">
                     <div class="metric-box">
-                        <div class="metric-label">1. Income</div>
+                        <div class="metric-label">1. Age</div>
                         <div class="metric-value">28%</div>
                     </div>
                     <div class="metric-box">
-                        <div class="metric-label">2. Credit Score</div>
+                        <div class="metric-label">2. Symptom Severity</div>
                         <div class="metric-value">24%</div>
                     </div>
                     <div class="metric-box">
-                        <div class="metric-label">3. Employment Years</div>
+                        <div class="metric-label">3. Zip Code</div>
                         <div class="metric-value">18%</div>
                     </div>
                     <div class="metric-box">
-                        <div class="metric-label">4. Age Group</div>
+                        <div class="metric-label">4. Insurance Plan Tier</div>
                         <div class="metric-value">14%</div>
                     </div>
                 </div>
 
                 <h2>Recommendations</h2>
                 <div class="recommendation critical">
-                    <strong>🔴 CRITICAL:</strong> Investigate gender bias in employment_years feature. Consider feature removal or reweighting.
+                    <strong>🔴 CRITICAL:</strong> Investigate zip code bias in triage features. Consider feature removal or reweighting.
                 </div>
                 <div class="recommendation warning">
-                    <strong>🟠 MEDIUM:</strong> Monitor education_level as a proxy feature. Implement human review for female applicants.
+                    <strong>🟠 MEDIUM:</strong> Monitor insurance_plan_tier as a proxy feature. Implement human review for under-served patients.
                 </div>
                 <div class="recommendation">
                     <strong>🟢 LOW:</strong> Update model quarterly. Conduct follow-up fairness analysis in 3 months.
@@ -371,11 +371,11 @@ async def get_sample_report():
 
                 <h2>Causal Analysis</h2>
                 <p>
-                    <strong>Finding:</strong> Being female reduces loan approval probability by approximately <strong>15%</strong> 
+                    <strong>Finding:</strong> Certain neighborhoods receive lower triage priority by approximately <strong>15%</strong> 
                     on average, holding other factors constant.
                 </p>
                 <p>
-                    <strong>Implication:</strong> This suggests systematic disadvantage, not explained by standard creditworthiness metrics.
+                    <strong>Implication:</strong> This suggests systematic disadvantage, not explained by standard clinical severity metrics.
                 </p>
 
                 <hr style="margin: 40px 0; border: none; border-top: 1px solid #ccc;">
@@ -386,7 +386,7 @@ async def get_sample_report():
             </div>
         </body>
     </html>
-    """
+    """.strip()
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
 
@@ -399,13 +399,13 @@ async def get_sample_model_card():
     Returns:
         Model card in markdown format
     """
-    markdown = """# AI Model Card: Loan Approval Decision Model v1.0
+    markdown = """# AI Model Card: Healthcare Triage Decision Model v1.0
 
 ## Model Details
 
-- **Name**: Loan Approval Decision Model
-- **Type**: Binary Classification (Approved/Denied)
-- **Organization**: Financial Services Inc.
+- **Name**: Healthcare Triage Decision Model
+- **Type**: Binary Classification (Prioritized/Not Prioritized)
+- **Organization**: City Health System
 - **Version**: 1.0
 - **Date Created**: January 2024
 - **Audit Date**: April 12, 2026
@@ -416,17 +416,17 @@ async def get_sample_model_card():
 
 ### Primary Use Cases
 
-**Lending**: This model assists loan officers in making approval decisions for consumer credit applications, considering creditworthiness and risk factors.
+**Healthcare**: This model assists clinical teams in prioritizing patients based on triage signals, while keeping humans in the loop.
 
-- Loan approval decisions up to $500,000
-- Used for personal, home, and auto loans
-- Applicants aged 18+
+- Patient triage support
+- Prior authorization review
+- Treatment prioritization
 
 ### Secondary Use Cases
 
-- Loan limit determination
-- Interest rate adjustment
-- Risk scoring for portfolio management
+- Referral routing
+- Care prioritization
+- Resource allocation
 
 ### Out-of-Scope Use Cases
 
@@ -442,11 +442,11 @@ async def get_sample_model_card():
 
 ### Data Characteristics
 
-- **Dataset Size**: 10,000+ historical loan applications
+- **Dataset Size**: 10,000+ historical triage records
 - **Time Period**: 2020-2024
-- **Features**: 45 financial and demographic attributes
-- **Target**: Binary (Loan Approved/Denied)
-- **Class Balance**: 72% approved, 28% denied
+- **Features**: 45 clinical and demographic attributes
+- **Target**: Binary (Prioritized/Not Prioritized)
+- **Class Balance**: 72% prioritized, 28% not prioritized
 
 ### Data Limitations
 
@@ -468,23 +468,23 @@ Monthly retraining recommended to account for:
 
 ### Fairness Limitations
 
-- ⚠️ **Gender Bias**: 15% approval rate disparity for female applicants
-- ⚠️ **Age Bias**: Potential disparate impact on applicants aged 25-34
-- ⚠️ **Proxy Features**: Employment years correlates 67% with gender
-- ✓ Mitigation: Human review for flagged applications
+- ⚠️ **Gender Bias**: 15% prioritization rate disparity for female patients
+- ⚠️ **Age Bias**: Potential disparate impact on patients aged 25-34
+- ⚠️ **Proxy Features**: Access-related variables correlate strongly with protected traits
+- ✓ Mitigation: Human review for flagged care decisions
 
 ### Performance Limitations
 
-- **Accuracy Varies by Subgroup**: 92% overall, but 87% for female applicants
+- **Accuracy Varies by Subgroup**: 92% overall, but 87% for female patients
 - **Threshold Sensitivity**: Small changes in decision threshold greatly affect fairness
 - **Limited Generalization**: Model trained on US data; may not transfer to other regions
 - **Temporal Decay**: Performance decreases over time as economic conditions change
 
 ### Data Limitations
 
-- **Training Set Bias**: Reflects historical lending patterns
-- **Missing Populations**: Underrepresented applicants aged 60+
-- **Measurement Error**: Income self-reported, not verified for all applicants
+- **Training Set Bias**: Reflects historical care access patterns
+- **Missing Populations**: Underrepresented patients aged 60+
+- **Measurement Error**: Intake information may be self-reported and incomplete
 - **Data Drift**: Economic conditions 2026 differ significantly from 2020-2024 training period
 
 ### Technical Limitations
@@ -505,7 +505,7 @@ Monthly retraining recommended to account for:
 **Safeguards**:
 - ✓ Quarterly fairness audits (AIF360 framework)
 - ✓ Human review for decisions adversely affecting protected groups
-- ✓ Transparency: Applicants can request explanations
+- ✓ Transparency: Patients can request explanations
 - ✓ Appeals process: All users can challenge decisions
 
 **Remaining Risks**:
@@ -536,18 +536,18 @@ Monthly retraining recommended to account for:
 - ✓ Immutable audit trail of all decisions
 - ✓ Tamper detection via hash chaining
 - ✓ Committee-based appeal review (3+ humans)
-- ✓ Compliance verification (FHA, ECOA, FCRA)
+- ✓ Compliance verification (HIPAA, Civil Rights Act, Section 1557)
 
 **Process**:
 1. Flagged decisions → Human review
-2. Applicant appeal → Committee review
+2. Patient appeal → Committee review
 3. Outcome → Audit trail update
 
 ---
 
 ### 4. Data Rights
 
-**Goal**: Protect applicant privacy and comply with regulations.
+**Goal**: Protect patient privacy and comply with regulations.
 
 **Safeguards**:
 - ✓ GDPR/CCPA compliance (access, deletion, portability)
@@ -579,8 +579,8 @@ Monthly retraining recommended to account for:
 ## Recommendations
 
 1. **Immediate** (This Quarter)
-   - Remove employment_years feature (proxy for gender)
-   - Implement mandatory human review for female applicants
+    - Remove access_proxy_score feature (proxy for protected traits)
+    - Implement mandatory human review for high-risk patient cohorts
    - Establish appeals committee
 
 2. **Short-term** (Q2-Q3 2026)

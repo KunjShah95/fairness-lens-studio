@@ -19,8 +19,8 @@ class PortalConfig:
     def __post_init__(self):
         if self.allowed_input_fields is None:
             self.allowed_input_fields = [
-                "age", "income", "credit_score", "employment_years",
-                "loan_amount", "education_level"
+                "age", "symptom_severity", "comorbidity_index", "prior_visit_count",
+                "wait_time_minutes", "triage_acuity_score"
             ]
         if self.protected_attributes is None:
             self.protected_attributes = [
@@ -135,8 +135,8 @@ async def generate_decision_explanation(
         
         # Decision summary (plain language)
         explanation["decision_summary"] = (
-            "Based on our analysis of your profile, your application was not approved. "
-            "Below, we explain which factors influenced this decision and what could change the outcome."
+            "Based on our analysis of your profile, your case was not prioritized for urgent care. "
+            "Below, we explain which factors influenced this outcome and what could change it."
         )
         
         # Key factors (features that influenced decision)
@@ -166,19 +166,19 @@ async def generate_decision_explanation(
             
             if changes:
                 explanation["counterfactual_paths"].append({
-                    "scenario": f"If you had applied with the following adjustment(s):",
+                    "scenario": f"If the following profile factors were different:",
                     "changes": [
                         f"• {feature.title()}: {change['from']} → {change['to']}"
                         for feature, change in changes.items()
                     ],
-                    "outcome": "Your application would have been APPROVED",
+                    "outcome": "Your case would likely be prioritized for care",
                     "feasibility": f"{cf.get('feasibility_score', 0)*100:.0f}% achievable"
                 })
         
         # Next steps
         explanation["next_steps"] = [
-            "📖 Review the explanation above to understand the decision",
-            "💭 Consider whether any changes are possible (e.g., could you improve credit score?)",
+            "📖 Review the explanation above to understand the care decision",
+            "💭 Consider whether any clinical context was missing or misrepresented",
             "✍️ If you believe the decision is unfair, you can file an appeal below",
             "📧 We'll send you a confirmation and keep you updated on your appeal status"
         ]

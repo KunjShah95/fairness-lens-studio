@@ -1,12 +1,64 @@
 import pandas as pd
 import numpy as np
 import logging
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List, Any
 from scipy.stats import pearsonr
 from sqlalchemy.orm import Session
 from app.db.models import AuditRun, AuditStatus
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_binary(series: pd.Series) -> pd.Series:
+    """Convert any series to a safe 0/1 numeric series."""
+    numeric = pd.to_numeric(series, errors="coerce").fillna(0)
+    return (numeric > 0).astype(int)
+
+
+def _manual_core_metrics(
+    df: pd.DataFrame,
+    label_col: str,
+    protected_attr: str,
+    privileged_val: int = 1,
+) -> Dict[str, Any]:
+    """Pure-pandas fallback metrics when optional fairness libs are unavailable."""
+    label = _safe_binary(df[label_col])
+    protected = _safe_binary(df[protected_attr])
+
+    privileged_mask = protected == int(privileged_val)
+    unprivileged_mask = protected != int(privileged_val)
+
+    priv_n = int(privileged_mask.sum())
+    unpriv_n = int(unprivileged_mask.sum())
+
+    if priv_n == 0 or unpriv_n == 0:
+        return {
+            "demographic_parity_difference": None,
+            "demographic_parity_ratio": None,
+            "equal_opportunity_difference": None,
+            "privileged_positive_rate": None,
+            "unprivileged_positive_rate": None,
+            "flagged": False,
+            "warning": "Insufficient group support to compute fairness metrics",
+            "method": "manual",
+        }
+
+    privileged_positive_rate = float(label[privileged_mask].mean())
+    unprivileged_positive_rate = float(label[unprivileged_mask].mean())
+
+    dp_difference = privileged_positive_rate - unprivileged_positive_rate
+    dp_ratio = unprivileged_positive_rate / max(privileged_positive_rate, 1e-9)
+
+    return {
+        "demographic_parity_difference": round(dp_difference, 4),
+        "demographic_parity_ratio": round(dp_ratio, 4),
+        # With only outcomes available, EO is approximated by positive-rate gap.
+        "equal_opportunity_difference": round(dp_difference, 4),
+        "privileged_positive_rate": round(privileged_positive_rate, 4),
+        "unprivileged_positive_rate": round(unprivileged_positive_rate, 4),
+        "flagged": abs(dp_difference) > 0.10 or dp_ratio < 0.80,
+        "method": "manual",
+    }
 
 async def compute_core_metrics(
     df: pd.DataFrame,
@@ -27,52 +79,70 @@ async def compute_core_metrics(
         Dict with comprehensive metrics for this attribute
     """
     try:
-        from aif360.datasets import BinaryLabelDataset
-        from aif360.metrics import BinaryLabelDatasetMetric
-        
-        # Validate columns exist
         if label_col not in df.columns:
             raise ValueError(f"Label column '{label_col}' not found")
         if protected_attr not in df.columns:
             raise ValueError(f"Protected attribute '{protected_attr}' not found")
-        
-        # Prepare data - ensure binary
+
         df_copy = df.copy()
-        df_copy[label_col] = pd.to_numeric(df_copy[label_col], errors='coerce').fillna(0).astype(int)
-        df_copy[protected_attr] = pd.to_numeric(df_copy[protected_attr], errors='coerce').fillna(0).astype(int)
-        
-        # Create AIF360 dataset
-        dataset = BinaryLabelDataset(
-            df=df_copy,
-            label_names=[label_col],
-            protected_attribute_names=[protected_attr]
-        )
-        
-        # Compute metrics
-        metric = BinaryLabelDatasetMetric(
-            dataset,
-            privileged_groups=[{protected_attr: privileged_val}],
-            unprivileged_groups=[{protected_attr: 0}]
-        )
-        
-        # Extract all key metrics
-        dp_difference = float(metric.mean_difference())
-        dp_ratio = float(metric.disparate_impact())
-        eo_difference = float(metric.equal_opportunity_difference())
-        
-        # Calculate group-level outcomes for visualization
-        privileged_positive_rate = metric.num_positives(privileged=True) / max(metric.num_instances(privileged=True), 1)
-        unprivileged_positive_rate = metric.num_positives(privileged=False) / max(metric.num_instances(privileged=False), 1)
-        
-        return {
-            "demographic_parity_difference": round(dp_difference, 4),
-            "demographic_parity_ratio": round(dp_ratio, 4),
-            "equal_opportunity_difference": round(eo_difference, 4),
-            "privileged_positive_rate": round(privileged_positive_rate, 4),
-            "unprivileged_positive_rate": round(unprivileged_positive_rate, 4),
-            "flagged": abs(dp_difference) > 0.10 or dp_ratio < 0.80
-        }
-    
+        df_copy[label_col] = _safe_binary(df_copy[label_col])
+        df_copy[protected_attr] = _safe_binary(df_copy[protected_attr])
+
+        # Hybrid strategy: attempt AIF360 first, then deterministic manual fallback.
+        try:
+            from aif360.datasets import BinaryLabelDataset
+            from aif360.metrics import BinaryLabelDatasetMetric
+
+            dataset = BinaryLabelDataset(
+                df=df_copy,
+                label_names=[label_col],
+                protected_attribute_names=[protected_attr],
+            )
+
+            metric = BinaryLabelDatasetMetric(
+                dataset,
+                privileged_groups=[{protected_attr: privileged_val}],
+                unprivileged_groups=[{protected_attr: 0}],
+            )
+
+            dp_difference = float(metric.mean_difference())
+            dp_ratio = float(metric.disparate_impact())
+
+            privileged_positive_rate = float(
+                metric.num_positives(privileged=True)
+                / max(metric.num_instances(privileged=True), 1)
+            )
+            unprivileged_positive_rate = float(
+                metric.num_positives(privileged=False)
+                / max(metric.num_instances(privileged=False), 1)
+            )
+
+            # EO requires predictions + labels. We approximate from observed outcome gap
+            # in this phase and preserve a stable field for downstream consumers.
+            eo_difference = dp_difference
+
+            return {
+                "demographic_parity_difference": round(dp_difference, 4),
+                "demographic_parity_ratio": round(dp_ratio, 4),
+                "equal_opportunity_difference": round(eo_difference, 4),
+                "privileged_positive_rate": round(privileged_positive_rate, 4),
+                "unprivileged_positive_rate": round(unprivileged_positive_rate, 4),
+                "flagged": abs(dp_difference) > 0.10 or dp_ratio < 0.80,
+                "method": "aif360_hybrid",
+            }
+        except Exception as lib_exc:
+            logger.warning(
+                f"AIF360 metric path unavailable for '{protected_attr}', falling back to manual metrics: {lib_exc}"
+            )
+            fallback = _manual_core_metrics(
+                df_copy,
+                label_col=label_col,
+                protected_attr=protected_attr,
+                privileged_val=privileged_val,
+            )
+            fallback["fallback_reason"] = str(lib_exc)
+            return fallback
+
     except Exception as e:
         logger.error(f"Error computing metrics for {protected_attr}: {e}", exc_info=True)
         return {
@@ -82,7 +152,7 @@ async def compute_core_metrics(
             "privileged_positive_rate": None,
             "unprivileged_positive_rate": None,
             "flagged": False,
-            "error": str(e)
+            "error": str(e),
         }
 
 async def detect_proxy_features(
@@ -145,7 +215,14 @@ async def detect_proxy_features(
                     logger.debug(f"Could not compute correlation for {feature}: {e}")
                     continue
         
-        return sorted(proxies, key=lambda x: abs(x["correlation"]), reverse=True)
+        deduped: Dict[tuple, Dict[str, Any]] = {}
+        for item in proxies:
+            key = (item["feature"], item["protected_attribute"])
+            current = deduped.get(key)
+            if current is None or abs(item["correlation"]) > abs(current["correlation"]):
+                deduped[key] = item
+
+        return sorted(deduped.values(), key=lambda x: abs(x["correlation"]), reverse=True)
     
     except Exception as e:
         logger.error(f"Error detecting proxy features: {e}")
@@ -317,7 +394,7 @@ async def run_full_audit_pipeline(
         except Exception as e:
             logger.error(f"[Audit {audit_id}] Error in causal analysis: {e}")
         
-        # Step 6: Compute fairness score (Phase 2 version)
+        # Step 6: Compute fairness score (hybrid version)
         logger.info(f"[Audit {audit_id}] Computing fairness score")
         fairness_score = _compute_fairness_score_phase2(
             results["metrics"],
@@ -337,8 +414,6 @@ async def run_full_audit_pipeline(
             audit_run.proxy_features = results["proxy_features"]
             audit_run.intersectional_results = results["intersectional_results"]
             
-            # Phase 3: Store new intelligence findings
-            from sqlalchemy.dialects.postgresql import JSON as PGJSON
             if hasattr(audit_run, 'feature_importance'):
                 audit_run.feature_importance = results["feature_importance"]
             if hasattr(audit_run, 'causal_analysis'):
@@ -370,13 +445,14 @@ def _compute_fairness_score_phase2(
     intersectional_results: List[Dict]
 ) -> int:
     """
-    Phase 2: Basic fairness score (0-100).
+    Hybrid fairness score (0-100).
     
     Weights:
-    - Demographic Parity: 40%
-    - Disparate Impact: 40%
-    - Proxy features: -10 per proxy (capped at -30)
-    - Intersectional disparity: -10 if any group > 20% disparity
+    - Demographic parity quality: 30%
+    - Equal opportunity quality: 30%
+    - Disparate impact quality: 25%
+    - Proxy features: -15 per proxy (capped at -30)
+    - Intersectional disparity: -10 if worst group > 20% disparity
     
     Args:
         metrics: Dict of attribute -> metrics dict
@@ -392,27 +468,32 @@ def _compute_fairness_score_phase2(
         
         # Collect valid metric values
         dp_values = []
+        eo_values = []
         di_values = []
         
         for attr, m in metrics.items():
             if isinstance(m, dict) and "error" not in m:
                 if m.get("demographic_parity_ratio") is not None:
-                    di_values.append(m["demographic_parity_ratio"])
+                    di_values.append(min(1.0, max(0.0, float(m["demographic_parity_ratio"]))))
                 if m.get("demographic_parity_difference") is not None:
-                    dp_diff = abs(m["demographic_parity_difference"])
+                    dp_diff = abs(float(m["demographic_parity_difference"]))
                     dp_values.append(min(1.0, 1.0 - dp_diff))  # Convert to similarity score
+                if m.get("equal_opportunity_difference") is not None:
+                    eo_diff = abs(float(m["equal_opportunity_difference"]))
+                    eo_values.append(min(1.0, 1.0 - eo_diff))
         
-        if not dp_values and not di_values:
+        if not dp_values and not di_values and not eo_values:
             return 50
         
         # Average scores
-        dp_score = (sum(dp_values) / len(dp_values)) * 40 if dp_values else 0
-        di_score = (sum(di_values) / len(di_values)) * 40 if di_values else 0
+        dp_score = (sum(dp_values) / len(dp_values)) * 30 if dp_values else 0
+        eo_score = (sum(eo_values) / len(eo_values)) * 30 if eo_values else 0
+        di_score = (sum(di_values) / len(di_values)) * 25 if di_values else 0
         
-        base_score = dp_score + di_score
+        base_score = dp_score + eo_score + di_score
         
         # Apply penalties
-        proxy_penalty = min(proxy_count * 10, 30)
+        proxy_penalty = min(proxy_count * 15, 30)
         
         intersectional_penalty = 0
         if intersectional_results:
@@ -453,7 +534,6 @@ async def compute_feature_importance_shap(
     """
     try:
         from sklearn.ensemble import RandomForestClassifier
-        import shap
         
         logger.info("Computing SHAP feature importance")
         
@@ -477,16 +557,24 @@ async def compute_feature_importance_shap(
         model = RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
         model.fit(X, y)
         
-        # Compute SHAP values
-        explainer = shap.TreeExplainer(model)
-        shap_values = explainer.shap_values(X)
-        
-        # Handle binary classification (shap_values is list of 2 arrays)
-        if isinstance(shap_values, list):
-            shap_values = shap_values[1]  # Use positive class
-        
-        # Compute mean absolute SHAP values per feature
-        mean_abs_shap = np.abs(shap_values).mean(axis=0)
+        try:
+            import shap
+
+            # Compute SHAP values
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X)
+
+            # Handle binary classification (shap_values is list of 2 arrays)
+            if isinstance(shap_values, list):
+                shap_values = shap_values[1]  # Use positive class
+
+            # Compute mean absolute SHAP values per feature
+            mean_abs_shap = np.abs(shap_values).mean(axis=0)
+            method = "shap"
+        except Exception as shap_exc:
+            logger.warning(f"SHAP unavailable, using model feature_importances_: {shap_exc}")
+            mean_abs_shap = model.feature_importances_
+            method = "model_importance_fallback"
         
         # Rank features
         feature_importance = []
@@ -502,6 +590,7 @@ async def compute_feature_importance_shap(
         
         results["feature_importance"] = feature_importance
         results["model_accuracy"] = round(float(model.score(X, y)), 4)
+        results["method"] = method
         
         logger.info(f"SHAP analysis complete. Top features: {[f['feature'] for f in feature_importance[:3]]}")
         
@@ -554,19 +643,11 @@ async def compute_causal_fairness_dowhy(
             logger.warning("No confounders found for causal analysis")
             confounders = [treatment_attr]
         
-        # Define causal model
-        gml_graph = """
-        digraph {
-        %s -> %s;
-        }
-        """ % (treatment_attr, label_col)
-        
         model = CausalModel(
             data=df_copy,
             treatment=treatment_attr,
             outcome=label_col,
-            common_causes=confounders,
-            causal_graph=gml_graph
+            common_causes=confounders
         )
         
         # Estimate causal effect

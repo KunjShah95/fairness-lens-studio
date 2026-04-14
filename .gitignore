@@ -22,3 +22,29 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Python cache/build artifacts
+**/__pycache__/
+*.py[cod]
+
+# Local/non-essential project notes (keep core README/docs only)
+/CONTEXT.md
+/README copy.md
+/DEMO_SCRIPT.md
+/DEPLOYMENT.md
+/DEPLOYMENT_GOOGLE_CLOUD.md
+/IMPACT_METRICS.md
+/PROJECT_PLAN.md
+/README_EXTENDED.md
+/SOLUTION.md
+/TEAM.md
+/USER_TESTING.md
+/CONTEXT.md

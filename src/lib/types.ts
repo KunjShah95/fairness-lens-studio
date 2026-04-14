@@ -1,9 +1,17 @@
+export type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
 export interface Dataset {
   id: string;
   name: string;
   rows: number;
   columns: string[];
-  data: Record<string, any>[];
+  data: Record<string, JsonValue>[];
   uploadedAt: Date;
   targetVariable?: string;
   sensitiveAttributes?: string[];
@@ -63,7 +71,7 @@ export interface MitigationStrategy {
   impact: number; // expected improvement
 }
 
-export type UserRole = 'admin' | 'analyst' | 'public';
+export type UserRole = 'admin' | 'analyst' | 'public' | 'compliance' | 'executive' | 'other' | string;
 
 export interface User {
   id: string;

@@ -18,8 +18,8 @@ class ModelCard:
         organization: str
     ):
         self.model_name = model_name
-        self.model_type = model_type  # "decision_model", "credit_scoring", "hiring", etc.
-        self.domain = domain  # "lending", "hiring", "healthcare"
+        self.model_type = model_type  # "decision_model", "clinical_risk", "triage", etc.
+        self.domain = domain  # primarily "healthcare"
         self.organization = organization
         self.created_at = datetime.utcnow().isoformat()
     
@@ -37,26 +37,9 @@ class ModelCard:
     def generate_intended_use(self) -> Dict[str, Any]:
         """Intended use cases."""
         use_cases = {
-            "lending": {
-                "primary": "Loan approval decisions",
-                "secondary": ["Loan amount determination", "Interest rate assignment"],
-                "out_of_scope": [
-                    "Non-credit decisions",
-                    "Hiring decisions",
-                    "Medical diagnoses"
-                ]
-            },
-            "hiring": {
-                "primary": "Resume screening and candidate ranking",
-                "secondary": ["Interview scheduling", "Salary recommendations"],
-                "out_of_scope": [
-                    "Final hiring decisions without human review",
-                    "Evaluation of non-job-related characteristics"
-                ]
-            },
             "healthcare": {
-                "primary": "Risk assessment and treatment recommendation",
-                "secondary": ["Resource allocation", "Priority ordering"],
+                "primary": "Patient triage and risk assessment",
+                "secondary": ["Treatment prioritization", "Resource allocation"],
                 "out_of_scope": [
                     "Replace clinical judgment",
                     "Make autonomous treatment decisions"
@@ -354,7 +337,7 @@ async def generate_model_card(
     Args:
         model_name: Name of the model
         model_type: Type of model (decision_model, classifier, etc.)
-        domain: Business domain (lending, hiring, healthcare)
+        domain: Business domain (healthcare preferred)
         organization: Organization that owns the model
         fairness_score: Current fairness audit score
         proxy_features: Detected proxy features

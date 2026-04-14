@@ -1,10 +1,10 @@
 import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, FeatureImportance, Correlation, SimulationScenario } from './types';
 
-function getUniqueValues(data: Record<string, any>[], col: string): string[] {
+function getUniqueValues(data: Record<string, unknown>[], col: string): string[] {
   return [...new Set(data.map(r => String(r[col])))].filter(Boolean);
 }
 
-function computeGroupMetrics(data: Record<string, any>[], target: string, sensitive: string): GroupMetric[] {
+function computeGroupMetrics(data: Record<string, unknown>[], target: string, sensitive: string): GroupMetric[] {
   const groups = getUniqueValues(data, sensitive);
   return groups.map(group => {
     const groupRows = data.filter(r => String(r[sensitive]) === group);
@@ -38,7 +38,7 @@ function computeFairnessMetrics(groupMetrics: GroupMetric[]): FairnessMetrics {
   return { demographicParity, equalOpportunity, disparateImpact, overallScore };
 }
 
-function computeFeatureImportance(data: Record<string, any>[], target: string, sensitive: string, columns: string[]): FeatureImportance[] {
+function computeFeatureImportance(data: Record<string, unknown>[], target: string, sensitive: string, columns: string[]): FeatureImportance[] {
   return columns
     .filter(c => c !== target)
     .map(feature => {
@@ -55,7 +55,7 @@ function computeFeatureImportance(data: Record<string, any>[], target: string, s
     .slice(0, 10);
 }
 
-function computeCorrelation(data: Record<string, any>[], col1: string, col2: string): number {
+function computeCorrelation(data: Record<string, unknown>[], col1: string, col2: string): number {
   const vals1 = data.map(r => Number(r[col1]) || 0);
   const vals2 = data.map(r => Number(r[col2]) || 0);
   const n = vals1.length;
@@ -74,7 +74,7 @@ function computeCorrelation(data: Record<string, any>[], col1: string, col2: str
   return denom > 0 ? Math.round((num / denom) * 100) / 100 : 0;
 }
 
-function computeCorrelations(data: Record<string, any>[], sensitive: string, columns: string[]): Correlation[] {
+function computeCorrelations(data: Record<string, unknown>[], sensitive: string, columns: string[]): Correlation[] {
   return columns
     .filter(c => c !== sensitive)
     .map(feature => ({
@@ -104,10 +104,6 @@ export function runBiasAnalysis(dataset: Dataset, targetVariable: string, sensit
 }
 
 export function runSimulation(dataset: Dataset, analysis: BiasAnalysis, removedFeatures: string[], reweighted: boolean): SimulationScenario {
-  // Simulate removing features and reweighting
-  const filteredColumns = dataset.columns.filter(c => !removedFeatures.includes(c));
-  let simulatedData = dataset.data;
-  
   // Simulate the effect: removing biased features improves fairness
   const baseMetrics = analysis.metrics;
   const biasReduction = removedFeatures.length * 0.08 + (reweighted ? 0.15 : 0);
@@ -162,35 +158,55 @@ export function getMitigationStrategies(analysis: BiasAnalysis) {
 }
 
 export function generateSampleDataset(): Dataset {
-  const data: Record<string, any>[] = [];
+  const data: Record<string, unknown>[] = [];
   const genders = ['Male', 'Female', 'Non-binary'];
   const races = ['White', 'Black', 'Asian', 'Hispanic'];
-  const educations = ['High School', 'Bachelor', 'Master', 'PhD'];
+  const insuranceTiers = ['Public', 'Basic', 'Standard', 'Premium'];
 
   for (let i = 0; i < 500; i++) {
     const gender = genders[Math.floor(Math.random() * genders.length)];
     const race = races[Math.floor(Math.random() * races.length)];
-    const education = educations[Math.floor(Math.random() * educations.length)];
-    const age = 22 + Math.floor(Math.random() * 40);
-    const experience = Math.floor(Math.random() * 20);
-    const score = Math.floor(Math.random() * 100);
+    const insurance_tier = insuranceTiers[Math.floor(Math.random() * insuranceTiers.length)];
+    const age = 18 + Math.floor(Math.random() * 70);
+    const symptom_severity = 1 + Math.floor(Math.random() * 10);
+    const comorbidity_index = Math.floor(Math.random() * 6);
+    const prior_visit_count = Math.floor(Math.random() * 12);
     
-    // Introduce bias: males and whites get higher approval rates
-    let approvalProb = 0.5 + score / 200 + experience / 40;
-    if (gender === 'Male') approvalProb += 0.15;
-    if (race === 'White') approvalProb += 0.1;
-    if (education === 'PhD') approvalProb += 0.1;
+    // Introduce bias to mimic inequitable access patterns in triage decisions
+    let triageProb = 0.2 + symptom_severity / 12 + comorbidity_index / 20 + prior_visit_count / 60;
+    if (gender === 'Male') triageProb += 0.08;
+    if (race === 'White') triageProb += 0.06;
+    if (insurance_tier === 'Premium') triageProb += 0.07;
     
-    const approved = Math.random() < Math.min(approvalProb, 0.95) ? 1 : 0;
+    const triage_priority = Math.random() < Math.min(triageProb, 0.95) ? 1 : 0;
 
-    data.push({ id: i + 1, gender, race, education, age, experience, score, approved });
+    data.push({
+      id: i + 1,
+      gender,
+      race,
+      insurance_tier,
+      age,
+      symptom_severity,
+      comorbidity_index,
+      prior_visit_count,
+      triage_priority,
+    });
   }
 
   return {
     id: crypto.randomUUID(),
-    name: 'Loan Approval Dataset (Sample)',
+    name: 'Healthcare Triage Dataset (Sample)',
     rows: data.length,
-    columns: ['gender', 'race', 'education', 'age', 'experience', 'score', 'approved'],
+    columns: [
+      'gender',
+      'race',
+      'insurance_tier',
+      'age',
+      'symptom_severity',
+      'comorbidity_index',
+      'prior_visit_count',
+      'triage_priority',
+    ],
     data,
     uploadedAt: new Date(),
   };

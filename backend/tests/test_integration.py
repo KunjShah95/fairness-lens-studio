@@ -13,6 +13,10 @@ import os
 # Add backend to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
+# Use sqlite for integration test collection/runtime unless explicitly overridden.
+os.environ.setdefault("DATABASE_URL", "sqlite:///./equitylens_integration_test.db")
+os.environ.setdefault("SQLALCHEMY_ECHO", "False")
+
 from app.main import app
 
 client = TestClient(app)
