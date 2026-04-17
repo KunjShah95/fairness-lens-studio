@@ -10,26 +10,26 @@ logger = logging.getLogger(__name__)
 
 class BiasAuditReport:
     """Generate comprehensive bias audit report."""
-    
+
     def __init__(
         self,
         audit_id: str,
         dataset_name: str,
         audit_date: str,
         fairness_score: int,
-        audit_results: Dict[str, Any]
+        audit_results: Dict[str, Any],
     ):
         self.audit_id = audit_id
         self.dataset_name = dataset_name
         self.audit_date = audit_date
         self.fairness_score = fairness_score
         self.audit_results = audit_results
-    
+
     def generate_executive_summary(self) -> Dict[str, Any]:
         """Generate executive summary section."""
         score_description = self._score_to_description(self.fairness_score)
         score_recommendation = self._score_to_recommendation(self.fairness_score)
-        
+
         return {
             "title": "Executive Summary",
             "content": f"""
@@ -40,80 +40,89 @@ FAIRNESS SCORE: {self.fairness_score}/100 ({score_description})
 RISK LEVEL: {"🔴 HIGH" if self.fairness_score < 60 else "🟠 MEDIUM" if self.fairness_score < 75 else "🟢 LOW"}
 
 Key Findings:
-- {len(self.audit_results.get('proxy_features', []))} potential proxy features detected
-- Intersectional bias identified in {len(self.audit_results.get('intersectional_results', []))} subgroups
+- {len(self.audit_results.get("proxy_features", []))} potential proxy features detected
+- Intersectional bias identified in {len(self.audit_results.get("intersectional_results", []))} subgroups
 - Feature importance analysis reveals systematic patterns
 
 Recommendation: {score_recommendation}
             """.strip(),
-            "risk_color": "red" if self.fairness_score < 60 else "orange" if self.fairness_score < 75 else "green"
+            "risk_color": "red"
+            if self.fairness_score < 60
+            else "orange"
+            if self.fairness_score < 75
+            else "green",
         }
-    
+
     def generate_metrics_section(self) -> Dict[str, Any]:
         """Generate detailed metrics section."""
         metrics = self.audit_results.get("metrics", {})
-        
-        sections = {
-            "title": "Fairness Metrics",
-            "subsections": []
-        }
-        
+
+        sections = {"title": "Fairness Metrics", "subsections": []}
+
         for attr, attr_metrics in metrics.items():
-            sections["subsections"].append({
-                "attribute": attr,
-                "demographic_parity": attr_metrics.get("demographic_parity_difference", 0),
-                "disparate_impact": attr_metrics.get("demographic_parity_ratio", 0),
-                "equal_opportunity": attr_metrics.get("equal_opportunity_difference", 0),
-                "flagged": attr_metrics.get("flagged", False)
-            })
-        
+            sections["subsections"].append(
+                {
+                    "attribute": attr,
+                    "demographic_parity": attr_metrics.get(
+                        "demographic_parity_difference", 0
+                    ),
+                    "disparate_impact": attr_metrics.get("demographic_parity_ratio", 0),
+                    "equal_opportunity": attr_metrics.get(
+                        "equal_opportunity_difference", 0
+                    ),
+                    "flagged": attr_metrics.get("flagged", False),
+                }
+            )
+
         return sections
-    
+
     def generate_proxies_section(self) -> Dict[str, Any]:
         """Generate proxy features section."""
         proxies = self.audit_results.get("proxy_features", [])
-        
+
         if not proxies:
             return {
                 "title": "Proxy Feature Analysis",
-                "content": "✅ No proxy features detected. Model does not use protected attributes indirectly."
+                "content": "✅ No proxy features detected. Model does not use protected attributes indirectly.",
             }
-        
+
         proxy_list = []
         for proxy in proxies:
-            proxy_list.append({
-                "feature": proxy.get("feature"),
-                "protected_attribute": proxy.get("protected_attribute"),
-                "correlation": f"{proxy.get('correlation', 0):.2%}",
-                "severity": "HIGH" if proxy.get('correlation', 0) > 0.85 else "MEDIUM"
-            })
-        
+            proxy_list.append(
+                {
+                    "feature": proxy.get("feature"),
+                    "protected_attribute": proxy.get("protected_attribute"),
+                    "correlation": f"{proxy.get('correlation', 0):.2%}",
+                    "severity": "HIGH"
+                    if proxy.get("correlation", 0) > 0.85
+                    else "MEDIUM",
+                }
+            )
+
         return {
             "title": "Proxy Feature Analysis",
             "content": f"⚠️ {len(proxies)} feature(s) may be serving as proxies for protected attributes:",
             "proxies": proxy_list,
-            "recommendation": "Consider removing or carefully monitoring these features"
+            "recommendation": "Consider removing or carefully monitoring these features",
         }
-    
+
     def generate_intersectionality_section(self) -> Dict[str, Any]:
         """Generate intersectional analysis section."""
         intersectional = self.audit_results.get("intersectional_results", [])
-        
+
         if not intersectional:
             return {
                 "title": "Intersectional Bias Analysis",
-                "content": "Analysis not available"
+                "content": "Analysis not available",
             }
-        
+
         # Sort by disparity (worst groups first)
         sorted_results = sorted(
-            intersectional,
-            key=lambda x: x.get("disparity", 0),
-            reverse=True
+            intersectional, key=lambda x: x.get("disparity", 0), reverse=True
         )
-        
+
         worst_groups = sorted_results[:5]
-        
+
         return {
             "title": "Intersectional Bias Analysis",
             "content": f"Examined {len(intersectional)} intersectional groups",
@@ -122,25 +131,25 @@ Recommendation: {score_recommendation}
                     "group": g.get("group", "Unknown"),
                     "disparity": f"{g.get('disparity', 0):.1%}",
                     "size": g.get("count", 0),
-                    "approval_rate": f"{g.get('approval_rate', 0):.1%}"
+                    "approval_rate": f"{g.get('approval_rate', 0):.1%}",
                 }
                 for g in worst_groups
             ],
-            "note": "Intersectional analysis reveals how bias compounds across dimensions"
+            "note": "Intersectional analysis reveals how bias compounds across dimensions",
         }
-    
+
     def generate_feature_importance_section(self) -> Dict[str, Any]:
         """Generate feature importance section."""
         importance = self.audit_results.get("feature_importance", [])
-        
+
         if not importance:
             return {
                 "title": "Feature Importance (SHAP)",
-                "content": "Feature importance analysis not available"
+                "content": "Feature importance analysis not available",
             }
-        
+
         top_features = importance[:10]
-        
+
         return {
             "title": "Feature Importance (SHAP Values)",
             "content": "Top 10 features driving model decisions:",
@@ -148,25 +157,25 @@ Recommendation: {score_recommendation}
                 {
                     "rank": idx + 1,
                     "feature": f.get("feature", "Unknown"),
-                    "importance": f"{f.get('shap_importance', 0)*100:.1f}%",
-                    "bar_width": f"{f.get('shap_importance', 0)*100:.0f}"
+                    "importance": f"{f.get('shap_importance', 0) * 100:.1f}%",
+                    "bar_width": f"{f.get('shap_importance', 0) * 100:.0f}",
                 }
                 for idx, f in enumerate(top_features)
-            ]
+            ],
         }
-    
+
     def generate_causal_analysis_section(self) -> Dict[str, Any]:
         """Generate causal analysis section."""
         causal = self.audit_results.get("causal_analysis", {})
-        
+
         if not causal:
             return {
                 "title": "Causal Fairness Analysis",
-                "content": "Causal analysis not available. Run full audit for DoWhy analysis."
+                "content": "Causal analysis not available. Run full audit for DoWhy analysis.",
             }
-        
+
         effects = causal.get("effects", {})
-        
+
         return {
             "title": "Causal Fairness Analysis",
             "content": "DoWhy causal analysis of fairness mechanisms:",
@@ -174,54 +183,59 @@ Recommendation: {score_recommendation}
                 {
                     "attribute": attr,
                     "effect": f"{effect:.3f}",
-                    "interpretation": self._interpret_causal_effect(effect)
+                    "interpretation": self._interpret_causal_effect(effect),
                 }
                 for attr, effect in effects.items()
-            ]
+            ],
         }
-    
+
     def generate_recommendations_section(self) -> Dict[str, Any]:
         """Generate actionable recommendations."""
         recommendations = []
-        
+
         if self.fairness_score < 60:
-            recommendations.append({
-                "priority": "🔴 CRITICAL",
-                "action": "Halt model deployment until fairness improves",
-                "rationale": "Fairness score indicates serious bias issues"
-            })
-        
+            recommendations.append(
+                {
+                    "priority": "🔴 CRITICAL",
+                    "action": "Halt model deployment until fairness improves",
+                    "rationale": "Fairness score indicates serious bias issues",
+                }
+            )
+
         proxies = self.audit_results.get("proxy_features", [])
         if proxies:
-            recommendations.append({
-                "priority": "🔴 HIGH",
-                "action": f"Remove or monitor {len(proxies)} proxy feature(s)",
-                "rationale": "These features may create illegal discrimination"
-            })
-        
+            recommendations.append(
+                {
+                    "priority": "🔴 HIGH",
+                    "action": f"Remove or monitor {len(proxies)} proxy feature(s)",
+                    "rationale": "These features may create illegal discrimination",
+                }
+            )
+
         if self.fairness_score < 75:
-            recommendations.append({
-                "priority": "🟠 MEDIUM",
-                "action": "Apply mitigation techniques (reweighting, feature removal, adversarial)",
-                "rationale": "Fairness improvement needed before deployment"
-            })
-        
+            recommendations.append(
+                {
+                    "priority": "🟠 MEDIUM",
+                    "action": "Apply mitigation techniques (reweighting, feature removal, adversarial)",
+                    "rationale": "Fairness improvement needed before deployment",
+                }
+            )
+
         if not recommendations:
-            recommendations.append({
-                "priority": "🟢 LOW",
-                "action": "Model appears acceptable for deployment",
-                "rationale": "Fairness metrics within acceptable ranges"
-            })
-        
-        return {
-            "title": "Recommendations",
-            "recommendations": recommendations
-        }
-    
+            recommendations.append(
+                {
+                    "priority": "🟢 LOW",
+                    "action": "Model appears acceptable for deployment",
+                    "rationale": "Fairness metrics within acceptable ranges",
+                }
+            )
+
+        return {"title": "Recommendations", "recommendations": recommendations}
+
     def generate_full_report(self) -> Dict[str, Any]:
         """Generate complete bias audit report."""
         logger.info(f"Generating full report for audit {self.audit_id}")
-        
+
         return {
             "report_id": self.audit_id,
             "title": f"AI Bias Audit Report: {self.dataset_name}",
@@ -234,20 +248,20 @@ Recommendation: {score_recommendation}
                 "intersectionality": self.generate_intersectionality_section(),
                 "feature_importance": self.generate_feature_importance_section(),
                 "causal_analysis": self.generate_causal_analysis_section(),
-                "recommendations": self.generate_recommendations_section()
-            }
+                "recommendations": self.generate_recommendations_section(),
+            },
         }
-    
+
     def generate_html_report(self) -> str:
         """Generate HTML version of report."""
         report = self.generate_full_report()
-        
+
         html = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>{report['title']}</title>
+    <title>{report["title"]}</title>
     <style>
         body {{
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -336,30 +350,36 @@ Recommendation: {score_recommendation}
 </head>
 <body>
     <div class="header">
-        <h1>{report['title']}</h1>
-        <div class="fairness-score">{report['fairness_score']}/100</div>
-        <p>Generated: {report['generated_at']}</p>
+        <h1>{report["title"]}</h1>
+        <div class="fairness-score">{report["fairness_score"]}/100</div>
+        <p>Generated: {report["generated_at"]}</p>
     </div>
     
     <div class="section">
-        <h2>{report['sections']['executive_summary']['title']}</h2>
-        <p>{report['sections']['executive_summary']['content']}</p>
+        <h2>{report["sections"]["executive_summary"]["title"]}</h2>
+        <p>{report["sections"]["executive_summary"]["content"]}</p>
     </div>
     
     <div class="section">
-        <h2>{report['sections']['recommendations']['title']}</h2>
+        <h2>{report["sections"]["recommendations"]["title"]}</h2>
         <div>
 """
-        
-        for rec in report['sections']['recommendations']['recommendations']:
-            priority_class = 'high' if '🔴' in rec['priority'] else 'medium' if '🟠' in rec['priority'] else 'low'
+
+        for rec in report["sections"]["recommendations"]["recommendations"]:
+            priority_class = (
+                "high"
+                if "🔴" in rec["priority"]
+                else "medium"
+                if "🟠" in rec["priority"]
+                else "low"
+            )
             html += f"""
             <div class="recommendation {priority_class}">
-                <strong>{rec['priority']} {rec['action']}</strong>
-                <p>{rec['rationale']}</p>
+                <strong>{rec["priority"]} {rec["action"]}</strong>
+                <p>{rec["rationale"]}</p>
             </div>
 """
-        
+
         html += """
         </div>
     </div>
@@ -371,9 +391,9 @@ Recommendation: {score_recommendation}
 </body>
 </html>
         """
-        
+
         return html
-    
+
     @staticmethod
     def _score_to_description(score: int) -> str:
         """Convert fairness score to description."""
@@ -385,7 +405,7 @@ Recommendation: {score_recommendation}
             return "Fair"
         else:
             return "Poor"
-    
+
     @staticmethod
     def _score_to_recommendation(score: int) -> str:
         """Convert fairness score to recommendation."""
@@ -397,7 +417,7 @@ Recommendation: {score_recommendation}
             return "Model has fairness concerns. Apply mitigation techniques."
         else:
             return "Model has critical fairness issues. Halt deployment pending remediation."
-    
+
     @staticmethod
     def _interpret_causal_effect(effect: float) -> str:
         """Interpret causal effect value."""
@@ -415,11 +435,11 @@ async def generate_bias_audit_report(
     audit_date: str,
     fairness_score: int,
     audit_results: Dict[str, Any],
-    format: str = "json"  # json, html, pdf
+    format: str = "json",  # json, html, pdf
 ) -> Dict[str, Any]:
     """
     Generate a comprehensive bias audit report.
-    
+
     Args:
         audit_id: Audit ID
         dataset_name: Name of dataset
@@ -427,29 +447,46 @@ async def generate_bias_audit_report(
         fairness_score: Overall fairness score
         audit_results: Complete audit results
         format: Output format (json, html, pdf)
-    
+
     Returns:
         Report in requested format
     """
     logger.info(f"Generating {format} audit report for {audit_id}")
-    
-    report_gen = BiasAuditReport(audit_id, dataset_name, audit_date, fairness_score, audit_results)
-    
+
+    report_gen = BiasAuditReport(
+        audit_id, dataset_name, audit_date, fairness_score, audit_results
+    )
+
     if format == "json":
         return report_gen.generate_full_report()
     elif format == "html":
         return {
             "format": "html",
             "content": report_gen.generate_html_report(),
-            "mime_type": "text/html"
+            "mime_type": "text/html",
         }
     elif format == "pdf":
-        # Note: PDF generation would use a library like reportlab or weasyprint
-        return {
-            "format": "pdf",
-            "content": "[PDF generation requires reportlab/weasyprint library]",
-            "mime_type": "application/pdf",
-            "note": "Full PDF generation available with reportlab"
-        }
+        try:
+            from weasyprint import HTML
+
+            html_content = report_gen.generate_html_report()
+            pdf_bytes = HTML(string=html_content).write_pdf()
+            import base64
+
+            return {
+                "format": "pdf",
+                "content": base64.b64encode(pdf_bytes).decode("utf-8"),
+                "mime_type": "application/pdf",
+                "filename": f"bias_audit_{audit_id}.pdf",
+            }
+        except Exception as e:
+            logger.error(f"PDF generation failed: {e}")
+            return {
+                "format": "pdf",
+                "error": str(e),
+                "fallback": "html",
+                "content": report_gen.generate_html_report(),
+                "mime_type": "text/html",
+            }
     else:
         return report_gen.generate_full_report()

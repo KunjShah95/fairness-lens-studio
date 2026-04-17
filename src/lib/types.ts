@@ -81,3 +81,14 @@ export interface User {
   name: string;
   role: UserRole;
 }
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'error' | 'success';
+  read: boolean;
+  timestamp: string;
+  link?: string;
+}
+

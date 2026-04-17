@@ -1,6 +1,6 @@
 import type { JsonValue, MitigationType } from '@/lib/types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
 
 export class ApiClient {
   private static headers = {
@@ -132,6 +132,10 @@ export class ApiClient {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch model card');
     return response.text();
+  }
+
+  static async getComplianceReport(auditId: string, jurisdiction: string = 'healthcare_hipaa', domain: string = 'healthcare') {
+    return this.request('GET', `/api/governance/compliance/${auditId}?jurisdiction=${jurisdiction}&domain=${domain}`);
   }
 
   static async exportAuditData(auditId: string, exportType: 'summary' | 'metrics' | 'intersectional' | 'features' | 'full' = 'summary') {

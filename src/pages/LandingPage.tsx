@@ -9,8 +9,9 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setUser } = useAppStore();
+  const { setUser, setCurrentDataset, setCurrentAnalysis } = useAppStore();
   const [name, setName] = useState('');
+  const [demoLoading, setDemoLoading] = useState(false);
 
   const handleLogin = () => {
     if (!name.trim()) return;
@@ -21,6 +22,70 @@ const LandingPage: React.FC = () => {
       role: 'analyst',
     });
     navigate('/dashboard');
+  };
+
+  const runDemo = async () => {
+    setDemoLoading(true);
+    try {
+      // Set demo user
+      setUser({
+        id: 'demo-user',
+        name: 'Demo User',
+        email: 'demo@equitylens.dev',
+        role: 'analyst',
+      });
+
+      // Set demo dataset
+      setCurrentDataset({
+        id: 'demo-dataset-001',
+        name: 'Demo Healthcare Dataset',
+        rows: 5000,
+        columns: ['gender', 'race', 'age', 'symptom_severity', 'comorbidity_index', 'prior_visit_count', 'insurance_tier', 'postal_code_risk', 'triage_priority'],
+        data: [],
+        uploadedAt: new Date(),
+        targetVariable: 'triage_priority',
+        sensitiveAttributes: ['gender', 'race', 'age'],
+      });
+
+      // Set demo analysis results - using id instead of auditId
+      setCurrentAnalysis({
+        id: 'demo-audit-001',
+        datasetId: 'demo-dataset-001',
+        metrics: {
+          demographicParity: 0.68,
+          equalOpportunity: 0.74,
+          disparateImpact: 0.71,
+          overallScore: 72,
+        },
+        groupMetrics: [
+          { group: 'Male', positiveRate: 0.82, count: 2450 },
+          { group: 'Female', positiveRate: 0.68, count: 2550 },
+          { group: 'Age 18-35', positiveRate: 0.78, count: 1500 },
+          { group: 'Age 36-55', positiveRate: 0.75, count: 2000 },
+          { group: 'Age 56+', positiveRate: 0.65, count: 1500 },
+        ],
+        sensitiveAttribute: 'gender',
+        targetVariable: 'triage_priority',
+        featureImportance: [
+          { feature: 'symptom_severity', importance: 0.45, isProxy: false },
+          { feature: 'comorbidity_index', importance: 0.25, isProxy: false },
+          { feature: 'postal_code_risk', importance: 0.15, isProxy: true },
+          { feature: 'insurance_tier', importance: 0.10, isProxy: true },
+          { feature: 'prior_visit_count', importance: 0.05, isProxy: false },
+        ],
+        correlations: [
+          { feature: 'postal_code_risk', correlation: 0.81 },
+          { feature: 'insurance_tier', correlation: 0.72 },
+        ],
+        timestamp: new Date(),
+      });
+
+      navigate('/analysis');
+    } catch (err) {
+      console.error('Demo error:', err);
+    } finally {
+      setDemoLoading(false);
+    }
   };
 
   const features = [
@@ -99,7 +164,7 @@ const LandingPage: React.FC = () => {
           </h1>
 
           {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <p className="text-xl md:text-2xl text-foreground/80 mb-10 max-w-2xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.2s' }}>
             Detect, explain, simulate, and mitigate bias in clinical AI. Build trust with patients and regulators through transparent fairness audits.
           </p>
 
@@ -110,8 +175,8 @@ const LandingPage: React.FC = () => {
                 Start Free Trial <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="rounded-full px-8 py-6 text-base border-border/60 bg-card/60 backdrop-blur">
-              View Demo
+            <Button size="lg" variant="outline" className="rounded-full px-8 py-6 text-base border-border/60 bg-card/60 backdrop-blur" onClick={runDemo} disabled={demoLoading}>
+              {demoLoading ? 'Loading Demo...' : 'View Demo'}
             </Button>
           </div>
 

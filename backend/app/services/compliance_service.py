@@ -9,17 +9,20 @@ logger = logging.getLogger(__name__)
 
 class JurisdictionEnum(str, Enum):
     """Supported jurisdictions and their regulations."""
+
     US_FEDERAL = "us_federal"
     EU_GDPR = "eu_gdpr"
     UK_EQUALITY = "uk_equality"
     CALIFORNIA_CCPA = "california_ccpa"
     NEW_YORK = "new_york"
+    HEALTHCARE_HIPAA = "healthcare_hipaa"
+    HEALTHCARE_EEOC = "healthcare_eeoc"
     GENERAL = "general"
 
 
 class ComplianceStandard:
     """Single compliance standard/regulation."""
-    
+
     def __init__(
         self,
         code: str,
@@ -27,7 +30,7 @@ class ComplianceStandard:
         description: str,
         requirements: List[str],
         applies_to: List[str],  # ["hiring", "lending", "housing", etc.]
-        jurisdiction: str
+        jurisdiction: str,
     ):
         self.code = code
         self.name = name
@@ -35,7 +38,7 @@ class ComplianceStandard:
         self.requirements = requirements
         self.applies_to = applies_to
         self.jurisdiction = jurisdiction
-    
+
     def applies_to_domain(self, domain: str) -> bool:
         """Check if this standard applies to the given domain."""
         return domain in self.applies_to or "all" in self.applies_to
@@ -43,7 +46,7 @@ class ComplianceStandard:
 
 class ComplianceFramework:
     """Collection of compliance standards for a jurisdiction."""
-    
+
     # Pre-defined compliance standards
     STANDARDS = {
         # US FEDERAL
@@ -55,12 +58,11 @@ class ComplianceFramework:
                 "Document all hiring decisions",
                 "Maintain equal selection rates across protected groups",
                 "Demonstrate business necessity for screening criteria",
-                "Conduct regular disparate impact analysis"
+                "Conduct regular disparate impact analysis",
             ],
             applies_to=["hiring"],
-            jurisdiction="us_federal"
+            jurisdiction="us_federal",
         ),
-        
         "fair_lending": ComplianceStandard(
             code="FCRA",
             name="Fair Credit Reporting Act",
@@ -70,12 +72,11 @@ class ComplianceFramework:
                 "Avoid redlining (discrimination by geography/race)",
                 "Regular monitoring for disparate impact",
                 "Transparency in credit decisions",
-                "Right to explanation for adverse decisions"
+                "Right to explanation for adverse decisions",
             ],
             applies_to=["lending"],
-            jurisdiction="us_federal"
+            jurisdiction="us_federal",
         ),
-        
         # EU GDPR
         "right_to_explanation": ComplianceStandard(
             code="GDPR-22",
@@ -85,12 +86,11 @@ class ComplianceFramework:
                 "Provide meaningful information about decision logic",
                 "Explain individual-specific factors in decision",
                 "Allow appeal of automated decision",
-                "Ensure human review is available"
+                "Ensure human review is available",
             ],
             applies_to=["all"],
-            jurisdiction="eu_gdpr"
+            jurisdiction="eu_gdpr",
         ),
-        
         "data_protection": ComplianceStandard(
             code="GDPR-5",
             name="Data Protection Principles (GDPR Article 5)",
@@ -100,12 +100,11 @@ class ComplianceFramework:
                 "Data minimization (collect only necessary data)",
                 "Ensure data quality and accuracy",
                 "Limited retention periods",
-                "Implement privacy by design"
+                "Implement privacy by design",
             ],
             applies_to=["all"],
-            jurisdiction="eu_gdpr"
+            jurisdiction="eu_gdpr",
         ),
-        
         # UK EQUALITY ACT
         "equality_act_2010": ComplianceStandard(
             code="EQA-2010",
@@ -115,12 +114,11 @@ class ComplianceFramework:
                 "No direct or indirect discrimination",
                 "No harassment or victimization",
                 "Reasonable adjustments for disabilities",
-                "Transparency in decision processes"
+                "Transparency in decision processes",
             ],
             applies_to=["all"],
-            jurisdiction="uk_equality"
+            jurisdiction="uk_equality",
         ),
-        
         # CALIFORNIA
         "employment_bias": ComplianceStandard(
             code="CA-FEHA",
@@ -130,12 +128,11 @@ class ComplianceFramework:
                 "Regular audits for bias in hiring/promotion",
                 "Document selection criteria",
                 "Ensure equal pay for equal work",
-                "Maintain diversity in workforce"
+                "Maintain diversity in workforce",
             ],
             applies_to=["hiring"],
-            jurisdiction="california_ccpa"
+            jurisdiction="california_ccpa",
         ),
-        
         # NEW YORK
         "algorithmic_accountability": ComplianceStandard(
             code="NYC-11602",
@@ -145,37 +142,95 @@ class ComplianceFramework:
                 "Annual bias audit of hiring algorithms",
                 "Disclosure of use of automated decision systems",
                 "Impact assessment prior to deployment",
-                "Public posting of results of audits"
+                "Public posting of results of audits",
             ],
             applies_to=["hiring"],
-            jurisdiction="new_york"
+            jurisdiction="new_york",
+        ),
+        # HEALTHCARE - HIPAA
+        "hipaa_nondiscrimination": ComplianceStandard(
+            code="HIPAA-1557",
+            name="HIPAA Section 1557 - Nondiscrimination",
+            description="Prohibits discrimination in healthcare programs receiving federal funds",
+            requirements=[
+                "No discrimination based on race, color, national origin, sex, age, disability",
+                "Language access services for limited English proficiency patients",
+                "Notice of nondiscrimination rights",
+                "Grievance procedure for discrimination complaints",
+            ],
+            applies_to=["healthcare"],
+            jurisdiction="healthcare_hipaa",
+        ),
+        "hipaa_ai_disclosure": ComplianceStandard(
+            code="HIPAA-AI",
+            name="HIPAA AI/ML Transparency Requirements",
+            description="Requirements for disclosure of AI/ML use in healthcare decisions",
+            requirements=[
+                "Disclose use of AI/ML in treatment decisions to patients",
+                "Explain how AI recommendations are generated",
+                "Human oversight of AI-influenced decisions",
+                "Bias monitoring for healthcare algorithms",
+                "Patient right to opt-out of AI-driven decisions where possible",
+            ],
+            applies_to=["healthcare"],
+            jurisdiction="healthcare_hipaa",
+        ),
+        # HEALTHCARE - EEOC (for clinical trials, employment)
+        "healthcare_bias": ComplianceStandard(
+            code="HC-EEOC",
+            name="Healthcare EEOC Compliance",
+            description="EEOC requirements applied to healthcare contexts",
+            requirements=[
+                "No discrimination in patient triage decisions based on protected characteristics",
+                "Equitable allocation of scarce resources (vaccines, ICU beds, treatments)",
+                "Non-discriminatory clinical trial recruitment",
+                "Accessible communication for patients with disabilities",
+            ],
+            applies_to=["healthcare"],
+            jurisdiction="healthcare_eeoc",
+        ),
+        # EU AI ACT (Healthcare as High-Risk)
+        "eu_ai_act_healthcare": ComplianceStandard(
+            code="EU-AI-ACT-HR",
+            name="EU AI Act - High-Risk AI Systems (Healthcare)",
+            description="Requirements for high-risk AI systems in healthcare under EU AI Act",
+            requirements=[
+                "Conformity assessment before deployment",
+                "Risk management system throughout lifecycle",
+                "Data governance and quality requirements",
+                "Technical documentation and record-keeping",
+                "Transparency and provision of information to users",
+                "Human oversight measures",
+                "Accuracy, robustness, and cybersecurity requirements",
+            ],
+            applies_to=["healthcare"],
+            jurisdiction="eu_gdpr",
         ),
     }
-    
+
     def __init__(self, jurisdiction: str):
         self.jurisdiction = jurisdiction
         self.standards = self._load_standards_for_jurisdiction(jurisdiction)
-    
-    def _load_standards_for_jurisdiction(self, jurisdiction: str) -> List[ComplianceStandard]:
+
+    def _load_standards_for_jurisdiction(
+        self, jurisdiction: str
+    ) -> List[ComplianceStandard]:
         """Load relevant standards for jurisdiction."""
         standards = []
         for standard in self.STANDARDS.values():
             if standard.jurisdiction == jurisdiction or jurisdiction == "general":
                 standards.append(standard)
         return standards
-    
+
     def get_applicable_standards(self, domain: str) -> List[Dict[str, Any]]:
         """Get standards applicable to domain."""
-        applicable = [
-            s for s in self.standards
-            if s.applies_to_domain(domain)
-        ]
+        applicable = [s for s in self.standards if s.applies_to_domain(domain)]
         return [
             {
                 "code": s.code,
                 "name": s.name,
                 "description": s.description,
-                "requirements": s.requirements
+                "requirements": s.requirements,
             }
             for s in applicable
         ]
@@ -183,104 +238,126 @@ class ComplianceFramework:
 
 class ComplianceChecker:
     """Check audit results against compliance standards."""
-    
+
     @staticmethod
     def check_compliance(
-        audit_results: Dict[str, Any],
-        jurisdiction: str,
-        domain: str
+        audit_results: Dict[str, Any], jurisdiction: str, domain: str
     ) -> Dict[str, Any]:
         """
         Check audit results against applicable compliance standards.
-        
+
         Args:
             audit_results: Results from bias audit
             jurisdiction: Target jurisdiction
             domain: Business domain (hiring, lending, etc.)
-        
+
         Returns:
             Compliance report
         """
         logger.info(f"Checking compliance for {jurisdiction}/{domain}")
-        
+
         framework = ComplianceFramework(jurisdiction)
         standards = framework.get_applicable_standards(domain)
-        
+
         fairness_score = audit_results.get("fairness_score", 0)
         proxy_features = audit_results.get("proxy_features", [])
-        
+
         # Compliance assessment
         compliance_checks = []
-        
+
         for standard_info in standards:
             standard_code = standard_info["code"]
             met = True
             issues = []
-            
+
             # EEO / Equal Employment: fairness score should be >= 75
             if standard_code == "EEO":
                 if fairness_score < 75:
                     met = False
-                    issues.append(f"Fairness score {fairness_score} below EEO threshold (75)")
+                    issues.append(
+                        f"Fairness score {fairness_score} below EEO threshold (75)"
+                    )
                 if len(proxy_features) > 0:
                     met = False
-                    issues.append(f"Proxy features detected: {[p.get('feature') for p in proxy_features]}")
-            
+                    issues.append(
+                        f"Proxy features detected: {[p.get('feature') for p in proxy_features]}"
+                    )
+
             # Fair Lending: fairness score >= 80
             elif standard_code == "FCRA":
                 if fairness_score < 80:
                     met = False
-                    issues.append(f"Fairness score {fairness_score} below Fair Lending threshold (80)")
+                    issues.append(
+                        f"Fairness score {fairness_score} below Fair Lending threshold (80)"
+                    )
                 # Check for geographic bias (postal_code, zip, address as proxies)
-                geo_proxies = [p for p in proxy_features if any(
-                    x in p.get('feature', '').lower() 
-                    for x in ['zip', 'postal', 'address', 'location']
-                )]
+                geo_proxies = [
+                    p
+                    for p in proxy_features
+                    if any(
+                        x in p.get("feature", "").lower()
+                        for x in ["zip", "postal", "address", "location"]
+                    )
+                ]
                 if geo_proxies:
                     met = False
                     issues.append(f"Redlining risk: geographic data detected as proxy")
-            
+
             # GDPR Right to Explanation: audit must compute feature importance
             elif standard_code == "GDPR-22":
                 if not audit_results.get("feature_importance"):
                     met = False
-                    issues.append("Feature importance (SHAP) not computed - required for explanations")
-            
+                    issues.append(
+                        "Feature importance (SHAP) not computed - required for explanations"
+                    )
+
             # GDPR Data Protection: flag proxy features
             elif standard_code == "GDPR-5":
                 if len(proxy_features) > 0:
                     met = False
-                    issues.append(f"Protected attribute proxies detected: {[p.get('feature') for p in proxy_features]}")
-            
+                    issues.append(
+                        f"Protected attribute proxies detected: {[p.get('feature') for p in proxy_features]}"
+                    )
+
             # Equality Act: fairness score >= 75
             elif standard_code == "EQA-2010":
                 if fairness_score < 75:
                     met = False
-                    issues.append(f"Fairness score {fairness_score} below equality threshold (75)")
-            
+                    issues.append(
+                        f"Fairness score {fairness_score} below equality threshold (75)"
+                    )
+
             # CA FEHA: fairness score >= 75
             elif standard_code == "CA-FEHA":
                 if fairness_score < 75:
                     met = False
-                    issues.append(f"Fairness score {fairness_score} below CA FEHA threshold (75)")
-            
+                    issues.append(
+                        f"Fairness score {fairness_score} below CA FEHA threshold (75)"
+                    )
+
             # NYC Algorithmic Accountability: audit must be documented
             elif standard_code == "NYC-11602":
                 if not audit_results.get("causal_analysis"):
                     met = False
-                    issues.append("Causal analysis required for NYC algorithmic accountability")
-            
-            compliance_checks.append({
-                "standard": standard_code,
-                "name": standard_info["name"],
-                "compliant": met,
-                "issues": issues
-            })
-        
+                    issues.append(
+                        "Causal analysis required for NYC algorithmic accountability"
+                    )
+
+            compliance_checks.append(
+                {
+                    "standard": standard_code,
+                    "name": standard_info["name"],
+                    "compliant": met,
+                    "issues": issues,
+                }
+            )
+
         # Overall compliance
         all_compliant = all(c["compliant"] for c in compliance_checks)
-        risk_level = "low" if all_compliant else "medium" if fairness_score >= 70 else "high"
-        
+        risk_level = (
+            "low" if all_compliant else "medium" if fairness_score >= 70 else "high"
+        )
+
         return {
             "jurisdiction": jurisdiction,
             "domain": domain,
@@ -288,80 +365,86 @@ class ComplianceChecker:
             "risk_level": risk_level,
             "checks": compliance_checks,
             "recommendations": ComplianceChecker._get_recommendations(
-                jurisdiction,
-                domain,
-                fairness_score,
-                proxy_features
-            )
+                jurisdiction, domain, fairness_score, proxy_features
+            ),
         }
-    
+
     @staticmethod
     def _get_recommendations(
-        jurisdiction: str,
-        domain: str,
-        fairness_score: int,
-        proxy_features: List[Dict]
+        jurisdiction: str, domain: str, fairness_score: int, proxy_features: List[Dict]
     ) -> List[str]:
         """Generate recommendations based on compliance gaps."""
         recommendations = []
-        
+
         if fairness_score < 60:
-            recommendations.append("⚠️ CRITICAL: Fairness score below 60. Consider halting model use pending remediation.")
-            recommendations.append("Implement mitigation techniques (reweighting, feature removal, adversarial debiasing).")
-        
+            recommendations.append(
+                "⚠️ CRITICAL: Fairness score below 60. Consider halting model use pending remediation."
+            )
+            recommendations.append(
+                "Implement mitigation techniques (reweighting, feature removal, adversarial debiasing)."
+            )
+
         if fairness_score < 75:
-            recommendations.append("⚠️ WARNING: Fairness score below regulatory threshold. Escalate for review.")
-        
+            recommendations.append(
+                "⚠️ WARNING: Fairness score below regulatory threshold. Escalate for review."
+            )
+
         if len(proxy_features) > 0:
-            recommendations.append(f"REMOVE PROXIES: {len(proxy_features)} potential proxy features detected.")
+            recommendations.append(
+                f"REMOVE PROXIES: {len(proxy_features)} potential proxy features detected."
+            )
             for proxy in proxy_features[:3]:
                 recommendations.append(
                     f"  • {proxy.get('feature')} (corr={proxy.get('correlation'):.2f} with {proxy.get('protected_attribute')})"
                 )
-        
+
         if jurisdiction == "eu_gdpr":
-            recommendations.append("Implement right-to-explanation portal for affected individuals (IP-Required).")
-            recommendations.append("Document data processing for data protection impact assessment.")
-        
+            recommendations.append(
+                "Implement right-to-explanation portal for affected individuals (IP-Required)."
+            )
+            recommendations.append(
+                "Document data processing for data protection impact assessment."
+            )
+
         if jurisdiction == "new_york" and domain == "hiring":
-            recommendations.append("Prepare annual algorithmic audit report for NYC compliance (LL 375).")
-        
+            recommendations.append(
+                "Prepare annual algorithmic audit report for NYC compliance (LL 375)."
+            )
+
         if not recommendations:
-            recommendations.append("✅ Model appears compliant with applicable regulations.")
-        
+            recommendations.append(
+                "✅ Model appears compliant with applicable regulations."
+            )
+
         return recommendations
 
 
 async def get_compliance_report(
-    audit_results: Dict[str, Any],
-    jurisdiction: str,
-    domain: str
+    audit_results: Dict[str, Any], jurisdiction: str, domain: str
 ) -> Dict[str, Any]:
     """
     Generate a comprehensive compliance report.
-    
+
     Args:
         audit_results: Results from bias audit
         jurisdiction: Target jurisdiction
         domain: Business domain
-    
+
     Returns:
         Compliance report
     """
     logger.info(f"Generating compliance report for {jurisdiction}/{domain}")
-    
+
     compliance_check = ComplianceChecker.check_compliance(
-        audit_results,
-        jurisdiction,
-        domain
+        audit_results, jurisdiction, domain
     )
-    
+
     return {
         "report_type": "compliance_assessment",
         "generated_at": datetime.utcnow().isoformat(),
         "jurisdiction": jurisdiction,
         "domain": domain,
-        **compliance_check
+        **compliance_check,
     }
 
 

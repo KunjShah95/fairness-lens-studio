@@ -229,6 +229,23 @@ This model is designed to support fair and transparent healthcare decisions.
     toast.success('JSON downloaded');
   };
 
+  const handleDownloadPDF = async () => {
+    if (!dashboardData?.audit_id) return;
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8001'}/api/reports/audit-report/${dashboardData.audit_id}?format=pdf`);
+      if (!response.ok) throw new Error('PDF generation failed');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fairness-audit-${currentDataset?.name || 'report'}.pdf`;
+      a.click();
+      toast.success('PDF downloaded');
+    } catch (err) {
+      toast.error('Failed to download PDF');
+    }
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success('Link copied to clipboard');
@@ -265,6 +282,9 @@ This model is designed to support fair and transparent healthcare decisions.
           </Button>
           <Button variant="outline" size="sm" className="gap-2" onClick={handleExportJSON}>
             <Database className="w-4 h-4" /> JSON
+          </Button>
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleDownloadPDF}>
+            <FileText className="w-4 h-4" /> PDF
           </Button>
           <Button size="sm" className="gap-2" onClick={handleGenerateReport} disabled={loading}>
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}

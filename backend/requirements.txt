@@ -17,6 +17,5 @@ celery==5.3.4
 redis==5.0.1
 python-dotenv==1.0.0
 python-multipart==0.0.6
-pytest==7.4.3
-pytest-asyncio==0.21.1
 httpx==0.25.2
+weaviate-client>=4.4.0

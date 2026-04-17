@@ -122,7 +122,7 @@ const FeaturesPage: React.FC = () => {
           Fairness, <span className="text-gradient">Automated</span>
         </h1>
 
-        <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+        <p className="text-xl text-foreground/80 mb-10 max-w-2xl mx-auto">
           Everything you need to detect, explain, and mitigate bias in AI-assisted healthcare decisions.
         </p>
 
