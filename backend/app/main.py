@@ -29,6 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 # Create FastAPI app
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -46,14 +47,32 @@ async def lifespan(app: FastAPI):
 
     # Initialize weaviate in background to not block startup
     import threading
+
     threading.Thread(target=_init_weaviate, daemon=True).start()
-    
+
+    # Initialize drift monitoring scheduler
+    try:
+        from app.tasks.drift_tasks import start_scheduler
+
+        start_scheduler()
+        logger.info("Drift monitoring scheduler initialized")
+    except Exception as exc:
+        logger.warning(f"Drift scheduler initialization skipped: {exc}")
+
     yield
-    
+
     # Shutdown logic
     logger.info("Shutting down EquityLens API")
     if _weaviate_initialized:
         weaviate_manager.close()
+
+    # Stop drift monitoring scheduler
+    try:
+        from app.tasks.drift_tasks import stop_scheduler
+
+        stop_scheduler()
+    except Exception:
+        pass  # Scheduler may not have been started
 
 
 app = FastAPI(
@@ -100,8 +119,6 @@ def _init_weaviate():
         _weaviate_initialized = True
     except Exception as exc:
         logger.warning(f"Weaviate initialization skipped: {exc}")
-
-
 
 
 @app.get("/health")
