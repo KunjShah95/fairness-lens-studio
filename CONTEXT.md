@@ -6,7 +6,7 @@
 
 ## 1. Why EquityLens Exists
 
-AI systems are making life-changing decisions — loan approvals, job shortlisting, medical triage — at massive scale. These models learn from historical data, and historical data is full of human bias. The result: automated systems that systematically disadvantage people based on gender, race, age, postal code, and dozens of other proxies.
+AI systems are making life-changing decisions — especially in **healthcare triage, risk scoring, prior authorization, and treatment prioritization** — at massive scale. These models learn from historical data, and historical data is full of human bias. The result: automated systems that can systematically disadvantage patients based on gender, race, age, location, disability, and dozens of other proxies.
 
 Existing tools like IBM AIF360 and Microsoft Fairlearn are powerful but aimed at data scientists. They answer "is there bias?" but not:
 
@@ -16,31 +16,35 @@ Existing tools like IBM AIF360 and Microsoft Fairlearn are powerful but aimed at
 - **How** do we prove we fixed it to regulators? (compliance)
 - **Can** the person who was harmed understand and challenge it? (individual rights)
 
-EquityLens exists to answer all five questions in one platform — and to make those answers accessible to lawyers, HR teams, affected individuals, and regulators — not just ML engineers.
+EquityLens exists to answer all five questions in one platform — and to make those answers accessible to clinicians, hospital administrators, affected individuals, and regulators — not just ML engineers.
 
 ---
 
 ## 2. Target Users and Their Needs
 
 ### Analysts / Data Scientists
-- Need to run bias audits quickly on existing models and datasets
+
+- Need to run bias audits quickly on healthcare models and datasets
 - Want SHAP/LIME explanations to understand feature contributions
 - Need before/after comparisons when mitigation is applied
 - Comfortable with technical dashboards and metric tables
 
 ### Compliance / Legal Teams
-- Need to know specifically which regulations are at risk
+
+- Need to know specifically which healthcare regulations and policies are at risk
 - Want audit-ready PDF reports they can hand to regulators
 - Need an immutable record of what was found and what was done
 - Do not want to interpret raw fairness scores — they want traffic-light indicators
 
-### HR / Business Leaders
+### Hospital / Operations Leaders
+
 - Want a single Fairness Score they can track over time
-- Need ROI framing: "fixing this reduces our legal exposure by ₹X"
-- Want the Bias Nutrition Label to communicate status to boards
+- Need ROI framing: "fixing this reduces clinical and legal risk"
+- Want the Bias Nutrition Label to communicate status to leadership
 - Need the Fairness Committee workflow to route accountability properly
 
 ### Affected Individuals (Public Users)
+
 - Do not have accounts — must be able to access the portal without login
 - Want a plain-language explanation of why a decision was made about them
 - Need a clear, structured way to challenge a decision they believe was unfair
@@ -51,15 +55,17 @@ EquityLens exists to answer all five questions in one platform — and to make t
 ## 3. The Eight System Stages — Design Rationale
 
 ### Stage 1 — Data Ingestion
-**What:** CSV uploads, trained model files (Pickle/ONNX), and direct plug-in connectors to Workday, Salesforce, and lending APIs.
 
-**Why these connectors matter:** Adoption of fairness tools dies when integration is hard. If an HR team can connect Workday in one click and audit their shortlisting model in 10 minutes, they will. If they have to export CSVs and write transformation scripts, they won't. The connectors are a strategic adoption wedge.
+**What:** CSV uploads, trained model files (Pickle/ONNX), and direct plug-in connectors to healthcare systems and clinical workflows.
+
+**Why these connectors matter:** Adoption of fairness tools dies when integration is hard. If a hospital team can connect a clinical workflow in one click and audit their triage model in 10 minutes, they will. If they have to export CSVs and write transformation scripts, they won't. The connectors are a strategic adoption wedge.
 
 **Key design decision:** We store raw uploaded data and metadata separately. Raw data is stored in PostgreSQL with row-level encryption. Metadata (column names, schema, detected sensitive attributes) is indexed for fast audit configuration.
 
 ---
 
 ### Stage 2 — Technical Bias Detection
+
 **What:** AIF360 and Fairlearn compute three core metrics. SHAP detects proxy variables. LIME generates local explanations per decision.
 
 **The three core metrics:**
@@ -77,6 +83,7 @@ EquityLens exists to answer all five questions in one platform — and to make t
 ---
 
 ### Stage 3 — Intelligence Layer (Differentiator)
+
 **What:** Three capabilities that go beyond what AIF360 and Fairlearn offer out of the box.
 
 **Temporal Drift Monitoring:**
@@ -91,10 +98,12 @@ Correlation-based bias detection has a fundamental weakness: correlation is not 
 ---
 
 ### Stage 4 — Decision Layer
+
 **What:** The Fairness Score, ROI framing, and automated mitigation.
 
 **Fairness Score (0–100):**
 A weighted composite:
+
 - Demographic Parity: 30%
 - Equal Opportunity: 30%
 - Disparate Impact: 25%
@@ -102,6 +111,7 @@ A weighted composite:
 - Intersectional disparity penalty: -10 if worst intersectional group is >20% below average
 
 Score bands:
+
 - 80–100: Pass (green)
 - 60–79: Marginal (amber) — review recommended
 - 0–59: High risk (red) — mitigation required before deployment
@@ -117,6 +127,7 @@ The system always presents a before/after comparison so teams can assess the acc
 ---
 
 ### Stage 5 — Human Impact Simulator (Core USP)
+
 **What:** Translates statistical bias into human stories and scenarios.
 
 **Population-level impact:**
@@ -127,6 +138,7 @@ Using DiCE-ML (Diverse Counterfactual Explanations), we generate the minimum fea
 
 **Scenario modeling:**
 Users can ask system-level questions:
+
 - "What if gender was removed from the model entirely?"
 - "What if we applied reweighting only?"
 - "What if the model only used income and credit score?"
@@ -138,10 +150,12 @@ Each scenario re-runs the model on the full dataset and returns updated Fairness
 ---
 
 ### Stage 6 — Trust Layer
+
 **What:** The Affected Person Portal and Appeals Workflow.
 
 **Affected Person Portal:**
-Accessible without login at `/portal`. A person enters their profile details (age, location, income band, other non-sensitive fields the org has configured as allowable) and receives:
+Accessible without login at `/portal`. A person enters their profile details (age, location, symptoms category, other non-sensitive fields the org has configured as allowable) and receives:
+
 1. A plain-language explanation of how the model treated their profile
 2. Which features drove the decision most heavily
 3. Whether any of those features are flagged as bias proxies
@@ -151,6 +165,7 @@ Accessible without login at `/portal`. A person enters their profile details (ag
 
 **Appeals Workflow:**
 Structured four-step process:
+
 1. Person submits appeal with reason (free text + supporting document upload)
 2. EquityLens automatically runs a bias audit scoped to that individual's decision, packages the SHAP explanation and proxy flags as evidence
 3. Legal team reviews the packaged evidence inside the platform (no need to query the ML team)
@@ -161,20 +176,22 @@ Every step is timestamped and stored in the immutable audit trail.
 ---
 
 ### Stage 7 — Compliance & Governance Layer
+
 **What:** Regulation mapper, audit trail, fairness committee workflow, and department-level thresholds.
 
 **Regulation Mapper:**
-A manually curated mapping table links each fairness metric + threshold + domain (hiring/lending/healthcare) to specific regulatory clauses. When an audit completes, the system looks up which regulations apply and whether each metric meets the required threshold for that regulation.
+A manually curated mapping table links each fairness metric + threshold + healthcare workflow to specific regulatory clauses. When an audit completes, the system looks up which regulations apply and whether each metric meets the required threshold for that regulation.
 
 Key regulations covered:
+
 - EU AI Act Articles 9, 10, 13 (high-risk AI systems)
-- EEOC 4/5ths rule (US hiring disparate impact)
 - GDPR Article 22 (automated decision-making rights)
-- Equal Credit Opportunity Act (ECOA) (US lending)
-- RBI Fair Lending Guidelines (India)
+- Healthcare privacy and automated decision guidance
+- Hospital policy and healthcare governance requirements
 
 **Immutable Audit Trail:**
 Every audit run, mitigation application, committee decision, and appeals outcome is logged with:
+
 - ISO 8601 timestamp
 - Actor (user ID + role)
 - Action type
@@ -185,6 +202,7 @@ This produces a tamper-evident log that can be presented to regulators as eviden
 
 **Fairness Committee Workflow:**
 Before a debiased model can be marked "approved for deployment," it must pass through a configurable sign-off chain. Default chain:
+
 1. Analyst confirms mitigation results
 2. Legal reviews regulation mapping
 3. CISO reviews data security implications
@@ -193,11 +211,12 @@ Before a debiased model can be marked "approved for deployment," it must pass th
 Each step is gated — the next approver cannot act until the previous step is complete. The full chain is stored in the audit trail.
 
 **Department-Level Thresholds:**
-Different business units have different risk tolerances and regulatory contexts. A hiring team in the EU faces different rules than a credit scoring team in India. Admins can configure per-department fairness thresholds (e.g., HR requires Demographic Parity ≥ 0.85; Credit requires Disparate Impact ≥ 0.80).
+Different clinical workflows have different risk tolerances and regulatory contexts. An emergency triage team faces different rules than a claims review team. Admins can configure per-department fairness thresholds (e.g., Triage requires Demographic Parity ≥ 0.85; Prior Authorization requires Disparate Impact ≥ 0.80).
 
 ---
 
 ### Stage 8 — Transparency Outputs
+
 **What:** The customer-facing and public-facing outputs of the platform.
 
 **Bias Nutrition Label:**

@@ -105,6 +105,8 @@ async def get_audit_result(audit_id: str, db: Session = Depends(get_db)):
             metrics=audit.metrics,
             fairness_score=audit.fairness_score,
             proxy_features=audit.proxy_features,
+            ai_insights=getattr(audit, 'ai_insights', audit.metrics.get('ai_insights') if audit.metrics else None),
+            counterfactual_fairness=getattr(audit, 'counterfactual_fairness', audit.metrics.get('counterfactual_fairness') if audit.metrics else None),
             error_message=audit.error_message,
         )
 
@@ -142,6 +144,8 @@ async def list_audits(
                     metrics=a.metrics,
                     fairness_score=a.fairness_score,
                     proxy_features=a.proxy_features,
+                    ai_insights=getattr(a, 'ai_insights', a.metrics.get('ai_insights') if a.metrics else None),
+                    counterfactual_fairness=getattr(a, 'counterfactual_fairness', a.metrics.get('counterfactual_fairness') if a.metrics else None),
                 )
                 for a in audits
             ],

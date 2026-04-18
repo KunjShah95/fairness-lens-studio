@@ -40,7 +40,7 @@ services:
     image: cr.weaviate.io/semitechnologies/weaviate:1.24.4
     container_name: equitylens_weaviate
     ports:
-    - "8080:8080"
+    - "8082:8080"
     - "50051:50051"
     volumes:
     - weaviate_data:/var/lib/weaviate
