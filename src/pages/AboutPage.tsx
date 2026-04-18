@@ -14,10 +14,20 @@ const AboutPage: React.FC = () => {
   ];
 
   const team = [
-    { name: 'Sarah Chen', role: 'CEO & Co-founder', bio: 'Former healthcare AI researcher. Passionate about fair AI in clinical settings.', image: 'SC' },
-    { name: 'Marcus Johnson', role: 'CTO & Co-founder', bio: 'Fairness ML researcher. Built bias detection at scale.', image: 'MJ' },
-    { name: 'Priya Patel', role: 'Head of Product', bio: 'Healthcare product leader. Previously EHR systems.', image: 'PP' },
-    { name: 'David Okonkwo', role: 'Head of Engineering', bio: 'ML platform engineer. Open source contributor.', image: 'DO' },
+    { 
+      name: 'Kunj Shah', 
+      role: 'Founder & Full Stack Developer', 
+      bio: 'Visionary behind EquityLens. Specialist in full-stack architecture and AI/ML system integrity.', 
+      image: '/kunj.jpg',
+      objectPosition: 'center 15%'
+    },
+    { 
+      name: 'Vidhya Mehta', 
+      role: 'Co-founder', 
+      bio: 'Expert in Python and AI/ML architectures. Driving fairness through causal modeling.', 
+      image: '/vidhya.jpeg',
+      objectPosition: 'center center'
+    },
   ];
 
   const timeline = [
@@ -105,12 +115,21 @@ const AboutPage: React.FC = () => {
           A multidisciplinary team of healthcare AI researchers,engineers, and policy experts.
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
           {team.map(member => (
             <Card key={member.name} className="card-warm-hover border-border/30">
               <CardContent className="p-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-2xl font-display font-bold text-primary">{member.image}</span>
+                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden border-2 border-primary/20">
+                  {member.image.startsWith('/') ? (
+                    <img 
+                      src={member.image} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover" 
+                      style={{ objectPosition: (member as any).objectPosition || 'center' }}
+                    />
+                  ) : (
+                    <span className="text-2xl font-display font-bold text-primary">{member.image}</span>
+                  )}
                 </div>
                 <h3 className="font-display font-semibold text-foreground">{member.name}</h3>
                 <p className="text-sm text-primary mb-2">{member.role}</p>
@@ -118,7 +137,6 @@ const AboutPage: React.FC = () => {
                 <div className="flex items-center justify-center gap-3 mt-4">
                   <Linkedin className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
                   <Twitter className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-                  <Github className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
                 </div>
               </CardContent>
             </Card>

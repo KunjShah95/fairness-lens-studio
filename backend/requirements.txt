@@ -20,3 +20,4 @@ python-dotenv==1.0.0
 python-multipart==0.0.6
 httpx==0.25.2
 weaviate-client>=4.4.0
+apscheduler==3.11.2
