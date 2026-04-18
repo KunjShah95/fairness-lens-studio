@@ -1,4 +1,14 @@
-from sqlalchemy import String, Float, Integer, JSON, DateTime, Enum, ForeignKey, Text, Boolean
+from sqlalchemy import (
+    String,
+    Float,
+    Integer,
+    JSON,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Text,
+    Boolean,
+)
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
 from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
@@ -7,32 +17,43 @@ import enum
 
 Base = declarative_base()
 
+
 class UserRole(str, enum.Enum):
     """Roles for the RBAC system."""
+
     admin = "admin"
     auditor = "auditor"
     reviewer = "reviewer"
     standard = "standard"
 
+
 class User(Base):
     """User model for authentication and authorization."""
+
     __tablename__ = "users"
-    
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
     email: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str] = mapped_column(String, nullable=True)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), default=UserRole.standard)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
     # Relationships
-    datasets: Mapped[List["Dataset"]] = relationship("Dataset", back_populates="uploader")
-    audit_runs: Mapped[List["AuditRun"]] = relationship("AuditRun", back_populates="creator")
-    
+    datasets: Mapped[List["Dataset"]] = relationship(
+        "Dataset", back_populates="uploader"
+    )
+    audit_runs: Mapped[List["AuditRun"]] = relationship(
+        "AuditRun", back_populates="creator"
+    )
+
     def __repr__(self) -> str:
         return f"<User {self.email} - {self.role}>"
-
 
 
 class Dataset(Base):
@@ -44,7 +65,9 @@ class Dataset(Base):
         String, primary_key=True, default=lambda: str(uuid.uuid4())
     )
     name: Mapped[str] = mapped_column(String, nullable=False, index=True)
-    uploaded_by: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
+    uploaded_by: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id"), nullable=False
+    )
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -94,7 +117,9 @@ class AuditRun(Base):
     dataset_id: Mapped[str] = mapped_column(
         String, ForeignKey("datasets.id"), nullable=False, index=True
     )
-    created_by: Mapped[str] = mapped_column(String, ForeignKey("users.id"), nullable=False)
+    created_by: Mapped[str] = mapped_column(
+        String, ForeignKey("users.id"), nullable=False
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
     )
@@ -218,24 +243,39 @@ class Appeal(Base):
 
 class MitigatedDataset(Base):
     """Model for datasets that have had bias mitigation applied."""
+
     __tablename__ = "mitigated_datasets"
-    
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
-    original_dataset_id: Mapped[str] = mapped_column(String, ForeignKey("datasets.id"), nullable=False)
-    audit_run_id: Mapped[str] = mapped_column(String, ForeignKey("audit_runs.id"), nullable=False)
-    
-    algorithm_used: Mapped[str] = mapped_column(String, nullable=False)  # e.g., 'reweighing', 'adversarial_debiasing'
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    original_dataset_id: Mapped[str] = mapped_column(
+        String, ForeignKey("datasets.id"), nullable=False
+    )
+    audit_run_id: Mapped[str] = mapped_column(
+        String, ForeignKey("audit_runs.id"), nullable=False
+    )
+
+    algorithm_used: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # e.g., 'reweighing', 'adversarial_debiasing'
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
     file_path: Mapped[str] = mapped_column(String, nullable=False)
-    
+
     # Performance differences
     accuracy_delta: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     fairness_score_delta: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    
+
     # Relationships
-    original_dataset: Mapped["Dataset"] = relationship("Dataset", back_populates="mitigated_versions")
-    audit_run: Mapped["AuditRun"] = relationship("AuditRun", back_populates="mitigated_datasets")
-    
+    original_dataset: Mapped["Dataset"] = relationship(
+        "Dataset", back_populates="mitigated_versions"
+    )
+    audit_run: Mapped["AuditRun"] = relationship(
+        "AuditRun", back_populates="mitigated_datasets"
+    )
+
     def __repr__(self) -> str:
         return f"<MitigatedDataset {self.id} - {self.algorithm_used}>"
 
@@ -284,3 +324,93 @@ class AuditTrailEntry(Base):
 
     def __repr__(self) -> str:
         return f"<AuditTrailEntry {self.id} - {self.action}>"
+
+
+class DriftMonitorConfig(Base):
+    """Configuration for scheduled drift monitoring."""
+
+    __tablename__ = "drift_monitor_configs"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    dataset_id: Mapped[str] = mapped_column(
+        String, ForeignKey("datasets.id"), nullable=False
+    )
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    schedule_cron: Mapped[str] = mapped_column(String, default="0 0 1 * *")  # Monthly
+    alert_threshold: Mapped[float] = mapped_column(Float, default=0.05)  # 5% drop
+    last_checked: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class DriftAlert(Base):
+    """Alerts when fairness score drifts over time."""
+
+    __tablename__ = "drift_alerts"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    config_id: Mapped[str] = mapped_column(
+        String, ForeignKey("drift_monitor_configs.id"), nullable=False
+    )
+    previous_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    current_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    score_delta: Mapped[float] = mapped_column(Float, nullable=False)
+    metric_that_drifted: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(
+        String, default="open"
+    )  # open, acknowledged, resolved
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class TemporalCohort(Base):
+    """Time-based cohorts for bias analysis."""
+
+    __tablename__ = "temporal_cohorts"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    dataset_id: Mapped[str] = mapped_column(
+        String, ForeignKey("datasets.id"), nullable=False
+    )
+    cohort_label: Mapped[str] = mapped_column(
+        String, nullable=False
+    )  # "2024-Q1", "Jan2024"
+    start_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    end_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    fairness_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    metrics: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+
+class ModelVersion(Base):
+    """Multiple model versions for comparison."""
+
+    __tablename__ = "model_versions"
+
+    id: Mapped[str] = mapped_column(
+        String, primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    dataset_id: Mapped[str] = mapped_column(
+        String, ForeignKey("datasets.id"), nullable=False
+    )
+    version_label: Mapped[str] = mapped_column(String, nullable=False)  # "v1", "v2"
+    audit_run_id: Mapped[str] = mapped_column(
+        String, ForeignKey("audit_runs.id"), nullable=False
+    )
+    fairness_score: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    accuracy: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime, default=lambda: datetime.now(timezone.utc)
+    )
