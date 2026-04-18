@@ -4,19 +4,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Eye, Mail, Lock, User, Building2, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Eye, Mail, Lock, User, Building2, ArrowRight, CheckCircle2, Sparkles, Chrome } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from '@/hooks/use-toast';
 import type { UserRole } from '@/lib/types';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAppStore();
+  const { login: storeLogin } = useAppStore();
+  const { signUp, signInWithGoogle, loading: authLoading } = useAuth();
   const [form, setForm] = useState({
     name: '',
     email: '',
     organization: '',
-    role: '',
+    role: 'analyst',
     password: '',
     confirmPassword: '',
   });
@@ -32,11 +35,13 @@ const RegisterPage: React.FC = () => {
     
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setError('Please fill in all required fields');
+      toast({ title: 'Missing fields', description: 'Please fill in all required fields', variant: 'destructive' });
       return;
     }
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match');
+      toast({ title: 'Passwords do not match', description: 'Please make sure passwords match', variant: 'destructive' });
       return;
     }
 
@@ -49,16 +54,43 @@ const RegisterPage: React.FC = () => {
     setError('');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1200));
-      login({
+      await signUp(form.email, form.password, form.name);
+      storeLogin({
         id: crypto.randomUUID(),
         name: form.name,
         email: form.email,
         role: (form.role || 'analyst') as UserRole,
       });
+      toast({
+        title: 'Account created',
+        description: 'Welcome to EquityLens!',
+        className: 'bg-success text-success-foreground border-success',
+      });
       navigate('/dashboard');
-    } catch {
-      setError('Registration failed. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Registration failed';
+      setError(message);
+      toast({ title: 'Registration failed', description: message, variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithGoogle();
+      storeLogin({
+        id: crypto.randomUUID(),
+        name: form.name || 'User',
+        email: form.email || '',
+        role: 'analyst',
+      });
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Google sign-in failed';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -92,6 +124,44 @@ const RegisterPage: React.FC = () => {
             <CardDescription>Get started with EquityLens for free</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
+            {/* Social Sign Up */}
+            <div className="grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="rounded-xl" 
+                onClick={handleGoogleSignUp}
+                disabled={loading || authLoading}
+              >
+                <Chrome className="w-4 h-4 mr-2" /> Google
+              </Button>
+              <Button 
+                variant="outline" 
+                className="rounded-xl" 
+                onClick={() => {
+                  storeLogin({
+                    id: crypto.randomUUID(),
+                    name: 'Demo User',
+                    email: 'demo@equitylens.com',
+                    role: 'analyst',
+                  });
+                  navigate('/dashboard');
+                }}
+                disabled={loading || authLoading}
+              >
+                <Sparkles className="w-4 h-4 mr-2" /> Try Demo
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border/30" />
+              </div>
+              <div className="relative flex justify-center">
+                <span className="bg-card/60 px-4 text-sm text-muted-foreground">or sign up with email</span>
+              </div>
+            </div>
+
             <form onSubmit={handleRegister} className="space-y-4">
               {/* Name */}
               <div>
@@ -182,8 +252,8 @@ const RegisterPage: React.FC = () => {
                 <p className="text-sm text-destructive">{error}</p>
               )}
 
-              <Button type="submit" className="w-full rounded-full btn-warm-primary gap-2" disabled={loading}>
-                {loading ? 'Creating account...' : 'Create Account'} <ArrowRight className="w-4 h-4" />
+              <Button type="submit" className="w-full rounded-full btn-warm-primary gap-2" disabled={loading || authLoading}>
+                {loading || authLoading ? 'Creating account...' : 'Create Account'} <ArrowRight className="w-4 h-4" />
               </Button>
             </form>
 

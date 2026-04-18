@@ -6,10 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, Mail, Lock, ArrowRight, Chrome, Sparkles, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from '@/hooks/use-toast';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAppStore();
+  const { login: storeLogin } = useAppStore();
+  const { signIn, signInWithGoogle, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,29 +29,49 @@ const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      login({
+      await signIn(email, password);
+      storeLogin({
         id: crypto.randomUUID(),
         name: email.split('@')[0],
         email,
         role: 'analyst',
       });
       navigate('/dashboard');
-    } catch {
-      setError('Invalid email or password');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid email or password';
+      setError(message);
+      toast({
+        title: 'Login failed',
+        description: message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialLogin = async (provider: string) => {
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signInWithGoogle();
+      navigate('/dashboard');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Google sign-in failed';
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDemoLogin = async () => {
     setLoading(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 800));
-      login({
+      storeLogin({
         id: crypto.randomUUID(),
         name: 'Demo User',
-        email: 'demo@example.com',
+        email: 'demo@equitylens.com',
         role: 'analyst',
       });
       navigate('/dashboard');
@@ -89,11 +112,21 @@ const LoginPage: React.FC = () => {
           <CardContent className="space-y-6 pt-4">
             {/* Social Login */}
             <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" className="rounded-xl bg-card/60 backdrop-blur border-border/40 hover:bg-card/80" onClick={() => handleSocialLogin('google')} disabled={loading}>
+              <Button 
+                variant="outline" 
+                className="rounded-xl bg-card/60 backdrop-blur border-border/40 hover:bg-card/80" 
+                onClick={handleGoogleLogin} 
+                disabled={loading || authLoading}
+              >
                 <Chrome className="w-4 h-4 mr-2" /> Google
               </Button>
-              <Button variant="outline" className="rounded-xl bg-card/60 backdrop-blur border-border/40 hover:bg-card/80" onClick={() => handleSocialLogin('github')} disabled={loading}>
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.69 1.965 1.035.81 1.335 2.025 1.05 2.46.795.165-.615.6-1.035 1.095-1.275-1.935-.225-3.97-.975-3.97-4.35 0-1.065.435-1.905 1.065-2.58-.105-.255-.465-1.275.105-2.55 0 0 .87-.285 2.85 1.035C9.525 4.545 10.68 4.5 11.85 4.5c1.17 0 2.37.045 3.45.135 1.98-.765 2.85-1.035 2.85-1.035.57 1.275.21 2.295.105 2.55.63.675 1.065 1.515 1.065 2.58 0 3.385-2.04 4.125-3.975 4.35.36.315.615.945.615 1.905 0 1.365-.015 2.445-.015 2.85 0 .315.225.78.825.57C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z"/></svg> GitHub
+              <Button 
+                variant="outline" 
+                className="rounded-xl bg-card/60 backdrop-blur border-border/40 hover:bg-card/80" 
+                onClick={handleDemoLogin} 
+                disabled={loading || authLoading}
+              >
+                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.69 1.965 1.035.81 1.335 2.025 1.05 2.46.795.165-.615.6-1.035 1.095-1.275-1.935-.225-3.97-.975-3.97-4.35 0-1.065.435-1.905 1.065-2.58-.105-.255-.465-1.275.105-2.55 0 0 .87-.285 2.85 1.035C9.525 4.545 10.68 4.5 11.85 4.5c1.17 0 2.37.045 3.45.135 1.98-.765 2.85-1.035 2.85-1.035.57 1.275.21 2.295.105 2.55.63.675 1.065 1.515 1.065 2.58 0 3.385-2.04 4.125-3.975 4.35.36.315.615.945.615 1.905 0 1.365-.015 2.445-.015 2.85 0 .315.225.78.825.57C20.565 21.795 24 17.31 24 12c0-6.63-5.37-12-12-12z"/></svg> Demo
               </Button>
             </div>
 
@@ -138,8 +171,8 @@ const LoginPage: React.FC = () => {
                 <p className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-lg">{error}</p>
               )}
 
-              <Button type="submit" className="w-full rounded-xl btn-warm-primary shadow-glow hover:shadow-warm hover:-translate-y-0.5" disabled={loading}>
-                {loading ? (
+              <Button type="submit" className="w-full rounded-xl btn-warm-primary shadow-glow hover:shadow-warm hover:-translate-y-0.5" disabled={loading || authLoading}>
+                {loading || authLoading ? (
                   <>
                     <Sparkles className="w-4 h-4 mr-2 animate-pulse" /> Signing in...
                   </>
@@ -150,6 +183,13 @@ const LoginPage: React.FC = () => {
                 )}
               </Button>
             </form>
+
+            {/* Forgot Password */}
+            <div className="text-center">
+              <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary">
+                Forgot password?
+              </Link>
+            </div>
 
             {/* Register Link */}
             <p className="text-center text-sm text-muted-foreground">

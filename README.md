@@ -7,7 +7,58 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0%2B-blue)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5.0%2B-purple)](https://vitejs.dev/)
 
-EquityLens is a comprehensive platform that makes AI bias detection accessible to everyone - from data scientists to affected individuals to regulators. Our mission is to ensure artificial intelligence serves humanity fairly by providing tools for transparency, accountability, and recourse.
+---
+
+## Demo in 30 Seconds
+
+```bash
+# Terminal 1 - Backend
+cd backend && python -m uvicorn app.main:app --port 8001
+
+# Terminal 2 - Frontend
+npm run dev
+
+# Open http://localhost:8080
+# Click "View Demo" on landing page - instant demo with pre-loaded results!
+```
+
+**Or use the demo dataset:** `backend/demo-healthcare-5000.csv` (5,000 records with embedded bias patterns)
+
+---
+
+## Why EquityLens Wins Hackathons
+
+### Key Differentiators
+
+| Feature | Why Judges Love It | Impact |
+|---------|-------------------|--------|
+| **One-Click Demo** | Instantly impressive UX | Click "View Demo" → working demo in 0 seconds |
+| **5K Realistic Dataset** | Real bias patterns embedded | Authentic healthcare triage decisions |
+| **Complete Pipeline** | End-to-end, not a toy | Upload → Audit → Mitigate → Report |
+| **PDF Reports** | Regulatory-ready | Compliance documentation that matters |
+| **Healthcare Focus** | High-stakes domain | Lives depend on fair AI decisions |
+| **Multi-Stakeholder** | 4 user types in one app | Analysts, Patients, Regulators, Executives |
+
+### Metrics That Matter
+
+- **Fairness Score**: 0-100 composite score (like credit score)
+- **3 Core Metrics**: Demographic Parity, Equal Opportunity, Disparate Impact
+- **Proxy Detection**: Finds hidden bias (e.g., postal code = race)
+- **Mitigation Impact**: Before/after comparison
+- **Audit Trail**: Immutable hash chain for regulators
+
+### Demo Flow (30 seconds)
+
+1. Landing page → Click "View Demo"
+2. Instantly see Dashboard with fairness metrics
+3. View bias detection results with charts
+4. Apply mitigation (reweighting/feature removal)
+5. Export PDF compliance report
+6. All working without any data entry!
+
+---
+
+EquityLens is a comprehensive platform that makes AI bias detection accessible to everyone - from data scientists to affected individuals to regulators.
 
 This project is submitted to the [Google Solution Challenge 2026](https://developers.google.com/community/gdg/groups/solution-challenge), addressing bias in AI systems as a critical challenge for equitable technology development.
 

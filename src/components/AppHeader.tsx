@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Eye, BarChart3, Upload, FlaskConical, FileText, LogOut, Menu, X, Scale } from 'lucide-react';
+import { Eye, BarChart3, Upload, FlaskConical, FileText, LogOut, Menu, X, Scale, Settings } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationCenter } from '@/components/NotificationCenter';
@@ -12,6 +12,7 @@ const navItems = [
   { path: '/analysis', label: 'Analysis', icon: FlaskConical },
   { path: '/simulator', label: 'Simulator', icon: Eye },
   { path: '/transparency', label: 'Reports', icon: FileText },
+  { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
 const publicNav = [
