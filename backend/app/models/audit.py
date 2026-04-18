@@ -38,6 +38,8 @@ class AuditResponse(BaseModel):
     causal_analysis: Optional[Dict[str, Any]] = None  # Phase 3: DoWhy analysis
     mitigation_results: Optional[Dict[str, Any]] = None  # Phase 4: Before/after metrics
     mitigation_applied: Optional[str] = None  # Phase 4: Mitigation technique applied
+    ai_insights: Optional[Dict[str, Any]] = None  # Phase 5: AI Insights
+    counterfactual_fairness: Optional[Dict[str, Any]] = None  # Phase 5: Counterfactual Fairness
     error_message: Optional[str] = None
     
     class Config:

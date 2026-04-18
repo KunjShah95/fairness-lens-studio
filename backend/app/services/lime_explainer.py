@@ -1,4 +1,3 @@
-# backend/app/services/lime_explainer.py
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, List
@@ -15,7 +14,9 @@ async def explain_instance(
     num_features: int = 5,
     num_samples: int = 5000,
 ) -> Dict[str, Any]:
-    """Generate LIME-style local explanation for a single prediction."""
+    """
+    Generate LIME-style local explanation for a single prediction.
+    """
     try:
         from lime.lime_tabular import LimeTabularExplainer
 
@@ -97,6 +98,7 @@ async def explain_instance(
 async def _permutation_explanation(
     df: pd.DataFrame, instance_index: int, label_col: str, num_features: int = 5
 ) -> Dict[str, Any]:
+    """Fallback: permutation-based explanation when LIME unavailable."""
     from sklearn.inspection import permutation_importance
 
     df_numeric = df.select_dtypes(include=[np.number]).copy()

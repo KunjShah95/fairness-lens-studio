@@ -1,4 +1,3 @@
-# backend/app/services/counterfactual_service.py
 import pandas as pd
 import numpy as np
 from typing import Dict, Any, List
@@ -35,7 +34,7 @@ async def generate_counterfactuals(
 
         try:
             cf_df = _generate_dice_cfs(
-                model, X, instance, feature_cols, desired_outcome, num_cfs
+                model, X, instance, feature_cols, desired_outcome, num_cfs, max_changes
             )
             return _format_counterfactuals(
                 cf_df, feature_cols, original_outcome, method="dice", num_cfs=num_cfs
@@ -65,9 +64,11 @@ async def generate_counterfactuals(
         return {"error": str(e)}
 
 
-def _generate_dice_cfs(model, X, instance, feature_cols, desired_outcome, num_cfs):
+def _generate_dice_cfs(
+    model, X, instance, feature_cols, desired_outcome, num_cfs, max_changes
+):
     return _generate_perturbation_cfs(
-        model, X, instance, feature_cols, desired_outcome, num_cfs, max_changes=3
+        model, X, instance, feature_cols, desired_outcome, None, num_cfs, max_changes
     )
 
 

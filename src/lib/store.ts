@@ -15,6 +15,28 @@ const generateSampleAnalysis = (datasetId: string, datasetName: string): BiasAna
     equalOpportunity: 0.82,
     disparateImpact: 0.75,
     overallScore: 78,
+    adversarial_audit: {
+      latent_bias_detected: true,
+      metrics: {
+        'location': {
+          reconstruction_auc: 0.72,
+          severity: 'high',
+          is_latent_proxy: true,
+          interpretation: 'High reconstruction accuracy suggests this feature acts as a proxy for protected attributes.'
+        }
+      }
+    },
+    counterfactual_fairness: {
+      overall_flagged: true,
+      metrics: {
+        'gender': {
+          violations: 142,
+          violation_rate: 0.12,
+          flagged: true,
+          interpretation: 'Changing gender results in different outcomes for 12% of the population.'
+        }
+      }
+    }
   };
   
   return {
@@ -24,6 +46,21 @@ const generateSampleAnalysis = (datasetId: string, datasetName: string): BiasAna
     groupMetrics,
     sensitiveAttribute: 'gender',
     targetVariable: 'approved',
+    fairness_score: 78,
+    proxy_features: [
+      {
+        feature: 'location',
+        protected_attribute: 'race',
+        correlation: 0.68,
+        p_value: 0.001,
+        severity: 'high',
+        note: 'Zip code is highly correlated with demographic data.'
+      }
+    ],
+    intersectional_results: [
+      { group: 'Black Female', n: 420, positive_rate: 0.65, disparity_from_average: -0.15, flagged: true },
+      { group: 'White Male', n: 850, positive_rate: 0.88, disparity_from_average: 0.08, flagged: false }
+    ],
     featureImportance: [
       { feature: 'income_level', importance: 0.35, isProxy: false },
       { feature: 'age_group', importance: 0.25, isProxy: false },
@@ -32,6 +69,48 @@ const generateSampleAnalysis = (datasetId: string, datasetName: string): BiasAna
       { feature: 'education', importance: 0.08, isProxy: false },
     ],
     correlations: [],
+    ai_insights: {
+      executive_summary: "The analysis reveals significant disparities in approval rates, particularly affecting intersectional groups. While the overall fairness score is 78, latent proxies like 'location' contribute to systemic bias.",
+      risk_profile: {
+        level: 'High',
+        score: 82,
+        factors: {
+          proxy_risk: 'High correlation between location and race.',
+          causal_risk: 'Gender appears to have a direct counterfactual impact.',
+          calibration_risk: 'Model is well-calibrated but biased in raw outcomes.',
+          legal_risk: 'Potential violation of fair lending regulations.'
+        }
+      },
+      compliance_status: 'Partially Compliant',
+      compliance_frameworks: {
+        'EU AI Act': {
+          status: 'At Risk',
+          requirement: 'High-risk AI systems must ensure representative and bias-free datasets.',
+          finding: 'Proxy features and intersectional disparities pose a non-compliance risk.'
+        },
+        'NIST AI RMF': {
+          status: 'Warning',
+          requirement: 'Identify and manage bias across the AI lifecycle.',
+          finding: 'Bias detection performed, but mitigation steps are pending.'
+        }
+      },
+      recommendations: [
+        {
+          category: 'Mitigation',
+          severity: 'high',
+          title: 'Address Proxy Features',
+          insight: "Feature 'location' is acting as a strong proxy for protected attributes.",
+          action: "Consider removing 'location' or applying adversarial debiasing."
+        },
+        {
+          category: 'Data Quality',
+          severity: 'medium',
+          title: 'Increase Intersectional Representation',
+          insight: "Certain intersectional subgroups have low sample sizes.",
+          action: "Collect more data for 'Black Female' and 'Other' demographic combinations."
+        }
+      ]
+    },
     timestamp: new Date(),
   };
 };

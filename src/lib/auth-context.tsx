@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fbAuth]);
 
   const signIn = async (email: string, password: string) => {
     const result = await signInWithEmailAndPassword(fbAuth, email, password);

@@ -22,6 +22,59 @@ export interface FairnessMetrics {
   equalOpportunity: number;
   disparateImpact: number;
   overallScore: number;
+  adversarial_audit?: {
+    latent_bias_detected: boolean;
+    metrics: Record<string, {
+      reconstruction_auc: number;
+      severity: string;
+      is_latent_proxy: boolean;
+      interpretation: string;
+    }>;
+  };
+  counterfactual_fairness?: {
+    overall_flagged: boolean;
+    metrics: Record<string, { 
+      violations: number;
+      violation_rate: number;
+      flagged: boolean;
+      interpretation: string;
+    }>;
+  };
+  individual_fairness?: {
+    consistency_score: number;
+    interpretation: string;
+    method: string;
+    error?: string;
+  };
+  multivariate_subgroups?: {
+    description: string;
+    size: number;
+    positive_rate: number;
+    disparity: number;
+    risk_level: string;
+  }[];
+  calibration_fairness?: {
+    overall_flagged: boolean;
+    metrics: Record<string, {
+      brier_disparity: number;
+      is_calibrated: boolean;
+      interpretation: string;
+    }>;
+  };
+  distributional_representativeness?: {
+    findings: Record<string, {
+      feature: string;
+      ks_statistic: number;
+      drift_severity: string;
+    }[]>;
+  };
+  bias_sensitivity?: {
+    sensitivity_map: Record<string, {
+      feature: string;
+      impact: number;
+      percentage_reduction: number;
+    }[]>;
+  };
 }
 
 export interface GroupMetric {
@@ -29,6 +82,13 @@ export interface GroupMetric {
   positiveRate: number;
   count: number;
   truePositiveRate?: number;
+}
+
+export interface CausalEffect {
+  node: string;
+  effect: number;
+  significance: 'high' | 'medium' | 'low';
+  pathway: string;
 }
 
 export interface BiasAnalysis {
@@ -41,6 +101,60 @@ export interface BiasAnalysis {
   featureImportance: FeatureImportance[];
   correlations: Correlation[];
   timestamp: Date;
+  fairness_score?: number;
+  proxy_features?: ProxyFeature[];
+  intersectional_results?: IntersectionalResult[];
+  causal_analysis?: {
+    nodes: string[];
+    edges: { source: string; target: string; weight: number }[];
+    effects?: Record<string, CausalEffect>;
+  };
+  ai_insights?: {
+    executive_summary?: string;
+    risk_profile?: {
+      level: string;
+      score: number;
+      factors: {
+        proxy_risk: string;
+        causal_risk: string;
+        calibration_risk?: string;
+        legal_risk?: string;
+      };
+    };
+    compliance_status?: string;
+    compliance_frameworks?: Record<string, {
+      status: string;
+      requirement: string;
+      finding: string;
+      article?: string;
+      category?: string;
+    }>;
+    recommendations?: {
+      category: string;
+      severity: string;
+      title: string;
+      insight: string;
+      action?: string;
+    }[];
+  };
+}
+
+export interface ProxyFeature {
+  feature: string;
+  protected_attribute: string;
+  correlation: number;
+  p_value: number;
+  severity: string;
+  multivariate_importance?: number;
+  note?: string;
+}
+
+export interface IntersectionalResult {
+  group: string;
+  n: number;
+  positive_rate: number;
+  disparity_from_average: number;
+  flagged: boolean;
 }
 
 export interface FeatureImportance {
