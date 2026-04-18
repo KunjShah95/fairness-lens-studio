@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     server: {
       host: "::",
       port: 8080,
+      strictPort: false, // Ensure it tries 8080 first, fallback to 8081 if taken
       hmr: {
         overlay: false,
       },

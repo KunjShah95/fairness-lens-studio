@@ -12,24 +12,14 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirebaseAuth, getFirebaseDb } from './firebase';
-import type { User as AppUser, UserRole } from './types';
-
-interface AuthContextType {
-  user: AppUser | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
-  updateUserProfile: (data: Partial<AppUser>) => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
+import type { User as AppUser } from './types';
+import { useAppStore } from './store';
+import { AuthContext } from './auth-context-core';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUserState] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const { setUser: setStoreUser } = useAppStore();
 
   const fbAuth = getFirebaseAuth();
   const fbDb = getFirebaseDb();
@@ -43,15 +33,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
           role: 'analyst',
         };
-        setUser(userData);
+        setUserState(userData);
+        setStoreUser(userData);
       } else {
-        setUser(null);
+        setUserState(null);
+        setStoreUser(null);
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, [fbAuth]);
+  }, [fbAuth, setStoreUser]);
 
   const signIn = async (email: string, password: string) => {
     const result = await signInWithEmailAndPassword(fbAuth, email, password);
@@ -61,7 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: result.user.displayName || result.user.email?.split('@')[0] || 'User',
       role: 'analyst',
     };
-    setUser(userData);
+    setUserState(userData);
+    setStoreUser(userData);
     setLoading(false);
   };
 
@@ -76,7 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name,
       role: 'analyst',
     };
-    setUser(userData);
+    setUserState(userData);
+    setStoreUser(userData);
     setLoading(false);
     
     // Background sync
@@ -102,7 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       name: result.user.displayName || result.user.email?.split('@')[0] || 'User',
       role: 'analyst',
     };
-    setUser(userData);
+    setUserState(userData);
+    setStoreUser(userData);
     setLoading(false);
     
     // Background sync to Firestore
@@ -121,7 +116,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     await signOut(fbAuth);
-    setUser(null);
+    setUserState(null);
+    setStoreUser(null);
   };
 
   const resetPassword = async (email: string) => {
@@ -131,7 +127,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateUserProfile = async (data: Partial<AppUser>) => {
     if (!user) return;
     await setDoc(doc(fbDb, 'users', user.id), data, { merge: true });
-    setUser({ ...user, ...data });
+    const updatedUser = { ...user, ...data };
+    setUserState(updatedUser);
+    setStoreUser(updatedUser);
   };
 
   return (
@@ -139,12 +137,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
 }

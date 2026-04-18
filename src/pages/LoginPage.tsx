@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Eye, Mail, Lock, ArrowRight, Chrome, Sparkles, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/use-auth';
 import { toast } from '@/hooks/use-toast';
 
 const LoginPage: React.FC = () => {

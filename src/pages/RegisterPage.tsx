@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Eye, Mail, Lock, User, Building2, ArrowRight, CheckCircle2, Sparkles, Chrome } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/use-auth';
 import { toast } from '@/hooks/use-toast';
 import type { UserRole } from '@/lib/types';
 

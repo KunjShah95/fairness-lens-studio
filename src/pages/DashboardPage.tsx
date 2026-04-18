@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { FairnessGauge } from '@/components/FairnessGauge';
 import { useAppStore } from '@/lib/store';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/use-auth';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, RadarChart, Radar, PolarGrid, 

@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth } from '@/lib/use-auth';
 import { 
   Home, Upload, FlaskConical, Eye, FileText, Settings, LogOut, Menu, X, Shield,
   BarChart3, Bell, ChevronRight
@@ -10,7 +10,7 @@ import {
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
 
-export const NAV_ITEMS = [
+const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
   { path: '/upload', label: 'Upload', icon: Upload },
   { path: '/analysis', label: 'Analysis', icon: FlaskConical },
