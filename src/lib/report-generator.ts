@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
-import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, SimulationScenario } from './types';
+import autoTable from 'jspdf-autotable';
+import type { Dataset, BiasAnalysis, GroupMetric, SimulationScenario } from './types';
 
 interface ReportData {
   dataset: Dataset | null;
@@ -8,333 +9,303 @@ interface ReportData {
 }
 
 function getScoreGrade(score: number): string {
-  if (score >= 80) return 'PASS';
-  if (score >= 60) return 'MARGINAL';
-  return 'HIGH RISK';
+  if (score >= 80) return 'OPTIMIZED';
+  if (score >= 60) return 'AUDITED';
+  return 'NON-COMPLIANT';
 }
 
 function getScoreColor(score: number): [number, number, number] {
-  if (score >= 80) return [16, 185, 129];
-  if (score >= 60) return [245, 158, 11];
-  return [239, 68, 68];
+  if (score >= 80) return [16, 185, 129]; // Success
+  if (score >= 60) return [245, 158, 11]; // Warning
+  return [239, 68, 68]; // Critical
 }
 
-function formatDate(date: Date): string {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function addSectionHeader(doc: jsPDF, title: string, y: number, margin: number, pageWidth: number): number {
-  doc.setFillColor(18, 55, 52);
-  doc.rect(margin, y, pageWidth - 2 * margin, 7, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'bold');
-  doc.text(title, margin + 5, y + 5);
-  
-  return y + 12;
+function formatDate(date: any): string {
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return new Date().toLocaleDateString();
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch (e) {
+    return new Date().toLocaleDateString();
+  }
 }
 
 export async function generatePDFReport(data: ReportData): Promise<void> {
-  const doc = new jsPDF();
-  const pageWidth = 210;
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let y = margin;
+  console.log('Initializing PDF Generation...', data);
   
-  const { dataset, analysis, simulations } = data;
-  const score = analysis?.metrics.overallScore || 78;
-  const scoreColor = getScoreColor(score);
-  
-  // Header
-  doc.setFillColor(18, 55, 52);
-  doc.rect(0, 0, pageWidth, 45, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text('EquityLens', margin, 22);
-  
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'normal');
-  doc.text('Fairness Audit Report', margin, 35);
-  
-  y = 55;
-  
-  // Report Title
-  doc.setTextColor(45, 35, 30);
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Comprehensive Fairness Analysis Report', margin, y);
-  y += 15;
-  
-  // Executive Summary Box
-  doc.setFillColor(248, 247, 245);
-  doc.roundedRect(margin, y, pageWidth - 2 * margin, 50, 3, 3, 'F');
-  
-  y += 10;
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Executive Summary', margin + 5, y);
-  y += 8;
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`Report ID: EL-${Date.now().toString(36).toUpperCase()}`, margin + 5, y);
-  y += 6;
-  doc.text(`Generated: ${formatDate(new Date())}`, margin + 5, y);
-  y += 6;
-  doc.text(`Model/Dataset: ${dataset?.name || 'Healthcare Triage Model'}`, margin + 5, y);
-  y += 6;
-  doc.text(`Fairness Score: ${score}/100 (${getScoreGrade(score)})`, margin + 5, y);
-  
-  y += 20;
-  
-  // Overall Fairness Score
-  doc.setFillColor(...scoreColor);
-  doc.roundedRect(margin, y, 40, 40, 3, 3, 'F');
-  
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
-  doc.setFont('helvetica', 'bold');
-  doc.text(String(score), margin + 20, y + 25, { align: 'center' });
-  doc.setFontSize(10);
-  doc.text('Fairness Score', margin + 20, y + 35, { align: 'center' });
-  
-  doc.setTextColor(45, 35, 30);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Fairness Assessment', margin + 50, y + 15);
-  
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-  const summaryText = score >= 80 
-    ? 'The model demonstrates acceptable fairness metrics across all protected attributes.'
-    : score >= 60
-    ? 'Moderate bias detected. Review and mitigation recommended before deployment.'
-    : 'High bias detected. Mitigation required before deployment.';
-    
-  doc.text(summaryText, margin + 50, y + 22);
-  
-  y += 50;
-  
-  // Key Metrics Section
-  y = addSectionHeader(doc, 'Key Fairness Metrics', y, margin, pageWidth);
-  
-  if (analysis) {
-    const metrics = analysis.metrics;
-    const metricsData = [
-      { name: 'Demographic Parity', value: metrics.demographicParity, threshold: 0.80, desc: 'Equality in positive outcomes across groups' },
-      { name: 'Equal Opportunity', value: metrics.equalOpportunity, threshold: 0.80, desc: 'Equality in true positive rates' },
-      { name: 'Disparate Impact', value: metrics.disparateImpact, threshold: 0.80, desc: 'Ratio of selection rates (EEOC 4/5 rule)' },
-    ];
-    
-    metricsData.forEach((m) => {
-      const pass = m.value >= m.threshold;
-      doc.setFillColor(pass ? 16 : 239, pass ? 185 : 68, pass ? 129 : 68);
-      doc.circle(margin + 5, y + 4, 3, 'F');
-      
-      doc.setTextColor(45, 35, 30);
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(m.name, margin + 15, y + 5);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`${m.value.toFixed(2)} (threshold: ${m.threshold})`, margin + 15, y + 11);
-      doc.setTextColor(100, 100, 100);
-      doc.text(m.desc, margin + 15, y + 17);
-      
-      doc.setTextColor(pass ? 16 : 239, pass ? 185 : 68, pass ? 129 : 68);
-      doc.text(pass ? 'PASS' : 'FAIL', pageWidth - margin - 25, y + 5);
-      
-      y += 25;
-    });
-  }
-  
-  y += 10;
-  
-  // Group Breakdown
-  if (analysis?.groupMetrics) {
-    y = addSectionHeader(doc, 'Outcome Analysis by Demographic Group', y, margin, pageWidth);
-    
-    const colWidths = [40, 35, 35, 35];
-    const cols = ['Group', 'Positive Rate', 'Population', 'Status'];
-    
-    doc.setFillColor(240, 238, 230);
-    doc.rect(margin, y, pageWidth - 2 * margin, 8, 'F');
-    doc.setTextColor(45, 35, 30);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    
-    let x = margin + 5;
-    cols.forEach((col, idx) => {
-      doc.text(col, x, y + 5.5);
-      x += colWidths[idx];
-    });
-    y += 10;
-    
-    doc.setFont('helvetica', 'normal');
-    analysis.groupMetrics.forEach((g: GroupMetric) => {
-      const rate = (g.positiveRate * 100).toFixed(1) + '%';
-      const status = g.positiveRate >= 0.70 ? 'OK' : 'Review';
-      
-      doc.setTextColor(45, 35, 30);
-      doc.text(g.group, margin + 5, y + 5);
-      doc.text(rate, margin + 45, y + 5);
-      doc.text(g.count.toLocaleString(), margin + 80, y + 5);
-      
-      doc.setTextColor(status === 'OK' ? 16 : 239, status === 'OK' ? 185 : 68, status === 'OK' ? 129 : 68);
-      doc.text(status, margin + 115, y + 5);
-      
-      y += 8;
-    });
-  }
-  
-  y += 10;
-  
-  // Feature Importance
-  if (analysis?.featureImportance) {
-    y = addSectionHeader(doc, 'Feature Importance Analysis', y, margin, pageWidth);
-    
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    
-    analysis.featureImportance.forEach((feat, i) => {
-      const importance = (feat.importance * 100).toFixed(0) + '%';
-      
-      doc.text(`${i + 1}. ${feat.feature}`, margin + 5, y + 4);
-      doc.setTextColor(100, 100, 100);
-      doc.text(importance, pageWidth - margin - 20, y + 4);
-      
-      if (feat.isProxy) {
-        doc.setTextColor(245, 158, 11);
-        doc.text('[PROXY RISK]', margin + 60, y + 4);
-      }
-      
-      y += 7;
-    });
-    
-    const proxyFeatures = analysis.featureImportance.filter(f => f.isProxy);
-    if (proxyFeatures.length > 0) {
-      y += 5;
-      doc.setTextColor(245, 158, 11);
-      doc.setFontSize(9);
-      doc.text(`Warning: ${proxyFeatures.length} proxy feature(s) detected that correlate with protected attributes.`, margin + 5, y);
-      y += 5;
+  try {
+    const { dataset, analysis, simulations } = data;
+    if (!analysis) {
+      console.error('PDF Generation Error: No analysis data provided');
+      throw new Error("No analysis data available for report generation.");
     }
-  }
-  
-  y += 10;
-  
-  // Simulations / Mitigation
-  if (simulations.length > 0) {
-    y = addSectionHeader(doc, 'Mitigation Simulations', y, margin, pageWidth);
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 15;
+    let y = 0;
+
+    // --- PAGE 1: HEADER & EXECUTIVE SUMMARY ---
+    // Background Header
+    doc.setFillColor(15, 23, 42); // Slate-900
+    doc.rect(0, 0, pageWidth, 50, 'F');
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('EquityLens Intelligence', margin, 25);
     
-    const bestSim = simulations.reduce((a, b) => a.metrics.overallScore > b.metrics.overallScore ? a : b);
-    const improvement = bestSim.metrics.overallScore - score;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Advanced Fairness Audit & Regulatory Compliance Report', margin, 35);
     
+    const auditId = (analysis.id || 'AUDIT-001').slice(0, 8).toUpperCase();
+    doc.text(`ID: ${auditId} | ${formatDate(analysis.timestamp || new Date())}`, pageWidth - margin, 35, { align: 'right' });
+
+    y = 65;
+
+    // Summary Title
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Executive Intelligence Summary', margin, y);
+    y += 10;
+
+    // Executive Summary Text
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${simulations.length} mitigation strategy simulation(s) were attempted.`, margin + 5, y);
-    y += 8;
+    doc.setTextColor(71, 85, 105);
+    const summaryText = analysis.ai_insights?.executive_summary || "Analysis complete. Summary pending additional compute.";
+    const summaryLines = doc.splitTextToSize(summaryText, pageWidth - 2 * margin);
+    doc.text(summaryLines, margin, y);
+    y += (summaryLines.length * 5) + 10;
+
+    // Score Card
+    const score = analysis.fairness_score || analysis.metrics?.overallScore || 0;
+    const color = getScoreColor(score);
     
-    doc.setTextColor(45, 35, 30);
-    doc.text(`Best Result: ${bestSim.name}`, margin + 5, y);
-    doc.setTextColor(16, 185, 129);
-    doc.text(`Score: ${bestSim.metrics.overallScore} (+${improvement} from baseline)`, margin + 70, y);
-    y += 15;
-  }
-  
-  // Page 2 - Additional Details
-  if (y > pageHeight - 100) {
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(margin, y, pageWidth - 2 * margin, 35, 2, 2, 'F');
+    
+    doc.setFillColor(...color);
+    doc.circle(margin + 20, y + 17.5, 12, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(score), margin + 20, y + 20, { align: 'center' });
+    
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(12);
+    doc.text(`Fairness Posture: ${getScoreGrade(score)}`, margin + 40, y + 15);
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    const rowCount = dataset?.rows?.toLocaleString() || 'N/A';
+    const featureCount = dataset?.columns?.length || 'N/A';
+    doc.text(`Audit conducted on ${rowCount} rows across ${featureCount} features.`, margin + 40, y + 22);
+
+    y += 45;
+
+    // Primary Metrics Table
+    doc.setTextColor(15, 23, 42);
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Core Fairness Indicators', margin, y);
+    y += 5;
+
+    const metrics = analysis.metrics || { demographicParity: 0, equalOpportunity: 0, disparateImpact: 0 };
+    autoTable(doc, {
+      startY: y,
+      head: [['Metric', 'Value', 'Status', 'Threshold']],
+      body: [
+        ['Demographic Parity', (metrics.demographicParity || 0).toFixed(3), (metrics.demographicParity || 0) >= 0.8 ? 'PASS' : 'FAIL', '0.800'],
+        ['Equal Opportunity', (metrics.equalOpportunity || 0).toFixed(3), (metrics.equalOpportunity || 0) >= 0.8 ? 'PASS' : 'FAIL', '0.800'],
+        ['Disparate Impact', (metrics.disparateImpact || 0).toFixed(3), (metrics.disparateImpact || 0) >= 0.8 ? 'PASS' : 'FAIL', '0.800'],
+      ],
+      headStyles: { fillColor: [15, 23, 42], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      margin: { left: margin, right: margin },
+      theme: 'striped',
+    });
+
+    y = (doc as any).lastAutoTable.finalY + 15;
+
+    // Subgroup Breakdown
+    doc.setFontSize(13);
+    doc.text(`Subgroup Analysis: ${analysis.sensitiveAttribute || 'Primary'}`, margin, y);
+    y += 5;
+
+    const groupMetrics = analysis.groupMetrics || [];
+    const avgRate = groupMetrics.reduce((sum, g) => sum + (g.positiveRate || 0), 0) / (groupMetrics.length || 1);
+    const subgroupRows = groupMetrics.map(g => [
+      g.group || 'Unknown',
+      `${((g.positiveRate || 0) * 100).toFixed(1)}%`,
+      (g.count || 0).toLocaleString(),
+      `${(((g.positiveRate || 0) - avgRate) * 100).toFixed(1)}%`
+    ]);
+
+    autoTable(doc, {
+      startY: y,
+      head: [['Group', 'Positive Rate', 'Sample Size', 'Disparity']],
+      body: subgroupRows,
+      headStyles: { fillColor: [51, 65, 85], fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      margin: { left: margin, right: margin },
+    });
+
+    // --- PAGE 2: ADVANCED DIAGNOSTICS & COMPLIANCE ---
     doc.addPage();
-    y = margin;
+    y = 25;
+
+    doc.setFontSize(16);
+    doc.text('Advanced Bias Diagnostics', margin, y);
+    y += 10;
+
+    // Intersectional Results
+    if (analysis.intersectional_results && analysis.intersectional_results.length > 0) {
+      doc.setFontSize(12);
+      doc.text('Intersectional Disparity Matrix', margin, y);
+      y += 5;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Intersection', 'N', 'Positive Rate', 'Disparity', 'Risk']],
+        body: analysis.intersectional_results.map(i => [
+          i.group || 'N/A',
+          i.n || 0,
+          `${((i.positive_rate || 0) * 100).toFixed(1)}%`,
+          `${((i.disparity_from_average || 0) * 100).toFixed(1)}%`,
+          i.flagged ? 'HIGH' : 'LOW'
+        ]),
+        headStyles: { fillColor: [30, 41, 59], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Proxy Features
+    if (analysis.proxy_features && analysis.proxy_features.length > 0) {
+      doc.setFontSize(12);
+      doc.text('Latent Proxy Identification', margin, y);
+      y += 5;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Feature', 'Correlation', 'Severity', 'Recommended Action']],
+        body: analysis.proxy_features.map(p => [
+          p.feature || 'N/A',
+          (p.correlation || 0).toFixed(3),
+          (p.severity || 'low').toUpperCase(),
+          'Adversarial Removal'
+        ]),
+        headStyles: { fillColor: [127, 29, 29], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Regulatory Compliance
+    doc.setFontSize(16);
+    doc.text('Regulatory Compliance Alignment', margin, y);
+    y += 10;
+
+    const frameworks = analysis.ai_insights?.compliance_frameworks || {};
+    if (Object.keys(frameworks).length > 0) {
+      autoTable(doc, {
+        startY: y,
+        head: [['Framework', 'Status', 'Requirement', 'Finding']],
+        body: Object.entries(frameworks).map(([name, data]: [string, any]) => [
+          name,
+          data?.status || 'N/A',
+          data?.requirement || 'N/A',
+          data?.finding || 'N/A'
+        ]),
+        headStyles: { fillColor: [18, 55, 52], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        columnStyles: {
+          2: { cellWidth: 50 },
+          3: { cellWidth: 60 }
+        },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Mitigation Simulations
+    if (simulations && simulations.length > 0) {
+      doc.setFontSize(16);
+      doc.setTextColor(15, 23, 42);
+      doc.text('Mitigation Strategy Simulations', margin, y);
+      y += 10;
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Strategy Name', 'Score', 'Improvement', 'Action Taken']],
+        body: simulations.map(s => [
+          s.name || 'Simulation',
+          (s.metrics?.overallScore || 0).toString(),
+          `+${(s.metrics?.overallScore || 0) - score}`,
+          s.removedFeatures?.length > 0 ? `Removed: ${s.removedFeatures.join(', ')}` : 'Reweighting Applied'
+        ]),
+        headStyles: { fillColor: [5, 150, 105], fontSize: 8 },
+        bodyStyles: { fontSize: 8 },
+        margin: { left: margin, right: margin },
+      });
+      y = (doc as any).lastAutoTable.finalY + 15;
+    }
+
+    // Recommendations
+    const recs = analysis.ai_insights?.recommendations || [];
+    if (recs.length > 0) {
+      doc.setFontSize(13);
+      doc.text('Remediation Roadmap', margin, y);
+      y += 5;
+
+      recs.forEach((rec, idx) => {
+        if (y > 260) { doc.addPage(); y = 20; }
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text(`${idx + 1}. ${rec.title || 'Recommendation'} [${(rec.severity || 'low').toUpperCase()}]`, margin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(71, 85, 105);
+        doc.setFontSize(9);
+        doc.text(`Insight: ${rec.insight || 'No detail available.'}`, margin + 5, y);
+        y += 5;
+        doc.text(`Action: ${rec.action || 'Contact compliance officer.'}`, margin + 5, y);
+        y += 10;
+      });
+    }
+
+    // Footer
+    const totalPages = (doc as any).internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`EquityLens Intelligence Audit | Page ${i} of ${totalPages}`, pageWidth / 2, 285, { align: 'center' });
+    }
+
+    // Clean filename
+    const rawName = dataset?.name || 'fairness_report';
+    const cleanName = rawName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    const timestamp = new Date().getTime();
+    const filename = `${cleanName}_audit_${timestamp}.pdf`;
+    
+    console.log(`Generating PDF: ${filename}`);
+    doc.save(filename);
+    console.log('PDF Generation Successful!');
+    
+  } catch (err) {
+    console.error('CRITICAL FAILURE: PDF Generation crashed.', err);
+    throw err;
   }
-  
-  // Methodology
-  y = addSectionHeader(doc, 'Methodology', y, margin, pageWidth);
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  
-  const methodology = [
-    '• Demographic Parity: Measures whether positive outcome rates are equal across groups',
-    '• Equal Opportunity: Measures whether true positive rates are equal across groups', 
-    '• Disparate Impact: Uses the 4/5ths rule (EEOC) - ratio should be ≥ 0.80',
-    '• Feature Importance: SHAP values used to determine feature contributions',
-    '• Proxy Detection: Features with correlation > 0.7 to protected attributes flagged',
-    '• Simulations: Reweighting, Feature Removal, and Adversarial Debiasing tested',
-  ];
-  
-  methodology.forEach(text => {
-    doc.text(text, margin + 5, y);
-    y += 6;
-  });
-  
-  y += 10;
-  
-  // Recommendations
-  y = addSectionHeader(doc, 'Recommendations', y, margin, pageWidth);
-  
-  doc.setFontSize(10);
-  const recommendations = score >= 80 
-    ? [
-        '✓ Model passes fairness thresholds and is approved for deployment',
-        '✓ Continue monitoring for temporal drift in fairness metrics',
-        '✓ Re-run audit quarterly or after significant data updates',
-      ]
-    : score >= 60
-    ? [
-        '⚠ Review required before deployment',
-        '• Consider applying reweighting mitigation strategy',
-        '• Review and potentially remove proxy features',
-        '• Document rationale for any deployment decisions',
-      ]
-    : [
-        '✗ Mitigation required before deployment',
-        '• Apply adversarial debiasing and re-run audit',
-        '• Remove identified proxy features from model',
-        '• Consider fairness-accuracy trade-off with stakeholders',
-        '• Document all decisions for compliance',
-      ];
-  
-  recommendations.forEach(text => {
-    doc.text(text, margin + 5, y);
-    y += 7;
-  });
-  
-  y += 10;
-  
-  // Compliance Section
-  y = addSectionHeader(doc, 'Compliance Notes', y, margin, pageWidth);
-  
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  
-  const compliance = [
-    'EU AI Act: Article 9 (Risk Assessment) - This report satisfies documentation requirements',
-    'GDPR: Article 22 - Automated decision-making transparency',
-    'EEOC: Four-Fifths Rule - Disparate Impact analysis included',
-  ];
-  
-  compliance.forEach(text => {
-    doc.text(text, margin + 5, y);
-    y += 6;
-  });
-  
-  // Footer
-  doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text(`Report generated by EquityLens on ${formatDate(new Date())}`, margin, pageHeight - 10);
-  
-  // Save
-  const filename = `${dataset?.name || 'fairness-report'}-${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(filename);
 }

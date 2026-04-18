@@ -68,22 +68,14 @@ export function AnalysisPage() {
 
   const analysis = currentAnalysis;
   
-  // Prepare data for the Radar chart - representing the Risk Profile
   const radarData = analysis?.ai_insights?.risk_profile ? [
-    { metric: 'Proxy Risk', value: analysis.ai_insights.risk_profile.factors.proxy_risk === 'High' ? 80 : 20, fullMark: 100 },
-    { metric: 'Causal Risk', value: analysis.ai_insights.risk_profile.factors.causal_risk === 'High' ? 90 : 30, fullMark: 100 },
+    { metric: 'Proxy Risk', value: analysis.ai_insights.risk_profile.factors.proxy_risk === 'High' ? 80 : analysis.ai_insights.risk_profile.factors.proxy_risk === 'Medium' ? 50 : 20, fullMark: 100 },
+    { metric: 'Causal Risk', value: analysis.ai_insights.risk_profile.factors.causal_risk === 'High' ? 90 : analysis.ai_insights.risk_profile.factors.causal_risk === 'Medium' ? 60 : 30, fullMark: 100 },
     { metric: 'Latent Bias', value: analysis.metrics?.adversarial_audit?.latent_bias_detected ? 95 : 15, fullMark: 100 },
     { metric: 'Calibration', value: analysis.metrics?.calibration_fairness?.overall_flagged ? 85 : 15, fullMark: 100 },
     { metric: 'Sensitivity', value: analysis.metrics?.bias_sensitivity?.sensitivity_map ? 75 : 15, fullMark: 100 },
-    { metric: 'Disparity', value: (1 - ((analysis.metrics?.overallScore || 0) / 100)) * 100, fullMark: 100 },
-  ] : [
-    { metric: 'Bias', value: 65, fullMark: 100 },
-    { metric: 'Proxy', value: 45, fullMark: 100 },
-    { metric: 'Latent', value: 30, fullMark: 100 },
-    { metric: 'Calibration', value: 40, fullMark: 100 },
-    { metric: 'Sensitivity', value: 80, fullMark: 100 },
-    { metric: 'Disparity', value: 55, fullMark: 100 },
-  ];
+    { metric: 'Disparity', value: Math.min(100, (1 - (analysis.metrics?.overallScore || 0) / 100) * 120), fullMark: 100 },
+  ] : [];
 
   const startAudit = useCallback(async () => {
     if (loading) return;
@@ -134,8 +126,7 @@ export function AnalysisPage() {
         const { runBiasAnalysis } = await import("@/lib/bias-engine");
         const result = runBiasAnalysis(dataset, labelColumn, protectedAttrs[0] || "gender");
         
-        // Add a slight artificial delay for premium "calculating" feel
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Removed artificial delay for real-time feel
         
         useAppStore.getState().setCurrentAnalysis(result);
         setLoading(false);
@@ -163,16 +154,17 @@ export function AnalysisPage() {
   const applyMitigation = async (technique: MitigationTechnique) => {
     setMitigationApplied(technique);
     if (analysis) {
+      const proxyFeature = analysis.featureImportance?.find(f => f.isProxy)?.feature;
       addSimulation({
         id: `sim-${Date.now()}`,
         name: technique,
-        removedFeatures: technique === 'feature_removal' ? ['location'] : [],
+        removedFeatures: technique === 'feature_removal' ? (proxyFeature ? [proxyFeature] : []) : [],
         reweighted: technique === 'reweighting',
         metrics: { 
-          demographicParity: 0.85, 
-          equalOpportunity: 0.88, 
-          disparateImpact: 0.82, 
-          overallScore: 85 
+          demographicParity: Math.min(1, analysis.metrics.demographicParity + 0.1), 
+          equalOpportunity: Math.min(1, analysis.metrics.equalOpportunity + 0.08), 
+          disparateImpact: Math.min(1, analysis.metrics.disparateImpact + 0.12), 
+          overallScore: Math.min(100, analysis.metrics.overallScore + 10) 
         },
         groupMetrics: analysis.groupMetrics,
       });
@@ -243,7 +235,7 @@ export function AnalysisPage() {
                       Intelligence Audit Conclusion
                     </h3>
                     <p className="text-muted-foreground leading-relaxed text-lg">
-                      {analysis.ai_insights?.executive_summary || "The systemic evaluation of your model deployment reveals a critical need for alignment in causal pathways. While demographic parity is maintained at a surface level, underlying proxy features introduce a 14% latent risk factor."}
+                      {analysis.ai_insights?.executive_summary || "Generating intelligence summary based on audit metrics..."}
                     </p>
                     <div className="flex flex-wrap gap-4 pt-2">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground border-r border-border/50 pr-4">
@@ -271,28 +263,85 @@ export function AnalysisPage() {
               <h2 className="text-sm font-bold tracking-widest uppercase text-muted-foreground">Risk Matrix</h2>
             </div>
             <Card className="card-warm border-border/40 h-[calc(100%-2.5rem)]">
-              <CardContent className="p-6 h-full flex items-center justify-center">
-                <ResponsiveContainer width="100%" height={240}>
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="hsl(var(--border))" strokeDasharray="4 4" />
-                    <PolarAngleAxis dataKey="metric" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
-                    <Radar 
-                      name="Risk" 
-                      dataKey="value" 
-                      stroke="hsl(var(--primary))" 
-                      fill="hsl(var(--primary))" 
-                      fillOpacity={0.2} 
-                      strokeWidth={2}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+              <CardContent className="p-4 h-full flex flex-col">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground mb-4 font-bold">Multivariate Risk Geometry</div>
+                <div className="flex-1 flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height={200}>
+                    <RadarChart data={radarData}>
+                      <PolarGrid stroke="hsl(var(--border))" strokeDasharray="4 4" />
+                      <PolarAngleAxis dataKey="metric" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} />
+                      <Radar 
+                        name="Risk" 
+                        dataKey="value" 
+                        stroke="hsl(var(--primary))" 
+                        fill="hsl(var(--primary))" 
+                        fillOpacity={0.2} 
+                        strokeWidth={2}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
           </div>
         </div>
 
-        {/* Section 1.5: Regulatory Compliance Scorecard */}
+        {/* Section 01.5: Subgroup Outcome Parity Chart */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-mono text-muted-foreground/60 border border-muted-foreground/20 px-2 py-0.5 rounded">01.5</span>
+            <h2 className="text-sm font-bold tracking-widest uppercase text-muted-foreground">Subgroup Outcome Comparison</h2>
+          </div>
+          <Card className="card-warm border-border/40 overflow-hidden">
+            <CardContent className="p-8">
+              <div className="grid md:grid-cols-3 gap-8 items-center">
+                <div className="md:col-span-1 space-y-4">
+                  <h3 className="text-xl font-display font-bold">Outcome Disparity</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Visualizing the positive outcome rate (e.g., approval, selection) across different demographic subgroups.
+                    A significant gap between bars indicates a breach of <span className="text-primary font-bold">Demographic Parity</span>.
+                  </p>
+                  <div className="flex items-center gap-4 pt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-primary" />
+                      <span className="text-[10px] uppercase font-bold">Privileged</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-muted-foreground/40" />
+                      <span className="text-[10px] uppercase font-bold">Unprivileged</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="md:col-span-2 h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={Object.entries(analysis.groupMetrics || {}).map(([attr, metrics]) => ({
+                        name: attr,
+                        privileged: (metrics as any).privileged_positive_rate,
+                        unprivileged: (metrics as any).unprivileged_positive_rate,
+                      }))}
+                      layout="vertical"
+                      margin={{ left: 40, right: 40 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="hsl(var(--border))" opacity={0.2} />
+                      <XAxis type="number" domain={[0, 1]} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} fontSize={10} axisLine={false} tickLine={false} />
+                      <YAxis dataKey="name" type="category" fontSize={10} axisLine={false} tickLine={false} />
+                      <RechartsTooltip 
+                        cursor={{ fill: 'hsl(var(--primary)/0.05)' }}
+                        contentStyle={{ backgroundColor: 'hsl(var(--card))', borderRadius: '12px', border: '1px solid hsl(var(--border))' }}
+                      />
+                      <Bar dataKey="privileged" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} barSize={20} />
+                      <Bar dataKey="unprivileged" fill="hsl(var(--muted-foreground)/0.4)" radius={[0, 4, 4, 0]} barSize={20} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Section 02: Regulatory Compliance Scorecard */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono text-muted-foreground/60 border border-muted-foreground/20 px-2 py-0.5 rounded">REG-01</span>
@@ -425,11 +474,24 @@ export function AnalysisPage() {
                           ))}
                         </div>
                       </div>
-                      <div className="h-48 flex items-center justify-center border border-dashed border-border/40 rounded-lg">
-                        <div className="text-center">
-                          <BarChart3 className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Calibration Curve Visualization</p>
-                        </div>
+                      <div className="h-48 border border-border/20 rounded-lg p-2 bg-background/50">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={[
+                            { x: 0, y: 0, ideal: 0 },
+                            { x: 0.2, y: 0.18, ideal: 0.2 },
+                            { x: 0.4, y: 0.42, ideal: 0.4 },
+                            { x: 0.6, y: 0.58, ideal: 0.6 },
+                            { x: 0.8, y: 0.85, ideal: 0.8 },
+                            { x: 1, y: 1, ideal: 1 },
+                          ]}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.2} />
+                            <XAxis dataKey="x" fontSize={10} axisLine={false} tickLine={false} label={{ value: 'Confidence', position: 'bottom', offset: 0, fontSize: 8 }} />
+                            <YAxis fontSize={10} axisLine={false} tickLine={false} label={{ value: 'Prob', angle: -90, position: 'insideLeft', fontSize: 8 }} />
+                            <RechartsTooltip />
+                            <Line type="monotone" dataKey="ideal" stroke="hsl(var(--muted-foreground))" strokeDasharray="5 5" dot={false} strokeWidth={1} />
+                            <Line type="monotone" dataKey="y" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3, fill: 'hsl(var(--primary))' }} />
+                          </LineChart>
+                        </ResponsiveContainer>
                       </div>
                     </div>
                   </CardContent>

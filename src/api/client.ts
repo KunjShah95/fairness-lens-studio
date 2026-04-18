@@ -24,15 +24,19 @@ export class ApiClient {
     return response.json();
   }
 
-  static uploadDataset(formData: FormData) {
+  static async uploadDataset(formData: FormData) {
     const url = `${BASE_URL}/api/datasets/upload`;
-    return fetch(url, {
+    const response = await fetch(url, {
       method: 'POST',
       body: formData,
-    }).then((res) => {
-      if (!res.ok) throw new Error('Upload failed');
-      return res.json();
     });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+
+    return response.json();
   }
 
   static listDatasets(skip = 0, limit = 50) {
@@ -147,9 +151,18 @@ export class ApiClient {
   }
 
   static async healthCheck() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 1500);
+
     try {
-      return await this.request('GET', '/health');
-    } catch {
+      const result = await this.request('GET', '/health', undefined, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return result;
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.log('Health check failed or timed out. Falling back to local engine.');
       return null;
     }
   }

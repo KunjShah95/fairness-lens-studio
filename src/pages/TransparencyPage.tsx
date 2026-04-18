@@ -20,22 +20,35 @@ const TransparencyPage: React.FC = () => {
     : null;
 
   const handleDownloadReport = async () => {
+    if (!currentAnalysis) {
+      toast({
+        title: 'Analysis Required',
+        description: 'Please run an analysis before generating a report.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setReportGenerating(true);
+    console.log('Triggering PDF Generation for audit:', currentAnalysis.id);
+    
     try {
       await generatePDFReport({
         dataset: currentDataset,
         analysis: currentAnalysis,
         simulations: simulations,
       });
+      
       toast({
-        title: 'Report downloaded',
-        description: 'PDF report saved to your downloads',
+        title: 'Report Generated',
+        description: 'The intelligence audit has been saved as a PDF.',
         className: 'bg-success text-success-foreground border-success',
       });
     } catch (error) {
+      console.error('TransparencyPage: PDF Generation Failed', error);
       toast({
-        title: 'Error generating report',
-        description: 'Please try again',
+        title: 'Generation Failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred during PDF creation.',
         variant: 'destructive',
       });
     } finally {
