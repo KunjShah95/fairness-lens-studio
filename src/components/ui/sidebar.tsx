@@ -23,7 +23,6 @@ import {
   useSidebar,
 } from "./sidebar-core";
 
-export { useSidebar };
 
 const SidebarProvider = React.forwardRef<
   HTMLDivElement,
