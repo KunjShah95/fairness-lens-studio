@@ -48,3 +48,4 @@ backend/.env.*
 /TEAM.md
 /USER_TESTING.md
 /CONTEXT.md
+.worktrees/
