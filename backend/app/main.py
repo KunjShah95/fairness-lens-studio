@@ -21,6 +21,7 @@ from app.routers import (
     governance,
     reports,
     demo,
+    drift,
 )
 
 # Configure logging
@@ -103,6 +104,7 @@ app.include_router(portal.router)
 app.include_router(governance.router)
 app.include_router(reports.router)
 app.include_router(demo.router)
+app.include_router(drift.router)
 
 from app.db.weaviate_client import weaviate_manager
 
