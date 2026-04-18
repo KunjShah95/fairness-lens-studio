@@ -2,7 +2,7 @@
 
 import logging
 from fastapi import APIRouter
-from datetime import datetime
+from datetime import datetime, UTC
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/demo", tags=["demo"])
@@ -20,7 +20,7 @@ async def health_check():
         "status": "healthy",
         "service": "EquityLens",
         "version": "0.1.0",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "endpoints": {
             "datasets": "POST /api/datasets/upload",
             "audit": "POST /api/audit/run",

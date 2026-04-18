@@ -5,6 +5,7 @@ Main entry point for the bias detection API.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import logging
 import os
 
@@ -29,10 +30,37 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifecycle manager for the FastAPI application."""
+    # Startup logic
+    logger.info(f"Starting EquityLens API in {settings.environment} mode")
+    logger.info(f"Database: {settings.database_url}")
+    logger.info(f"Redis: {settings.redis_url}")
+    try:
+        logger.info("Creating database tables...")
+        Base.metadata.create_all(bind=engine)
+        logger.info("Database tables ready")
+    except Exception as exc:
+        logger.warning(f"Database initialization skipped/unavailable: {exc}")
+
+    # Initialize weaviate in background to not block startup
+    import threading
+    threading.Thread(target=_init_weaviate, daemon=True).start()
+    
+    yield
+    
+    # Shutdown logic
+    logger.info("Shutting down EquityLens API")
+    if _weaviate_initialized:
+        weaviate_manager.close()
+
+
 app = FastAPI(
     title="EquityLens API",
     description="AI Bias Detection and Fairness Platform",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -74,31 +102,6 @@ def _init_weaviate():
         logger.warning(f"Weaviate initialization skipped: {exc}")
 
 
-@app.on_event("startup")
-async def startup():
-    """Startup event handler."""
-    logger.info(f"Starting EquityLens API in {settings.environment} mode")
-    logger.info(f"Database: {settings.database_url}")
-    logger.info(f"Redis: {settings.redis_url}")
-    try:
-        logger.info("Creating database tables...")
-        Base.metadata.create_all(bind=engine)
-        logger.info("Database tables ready")
-    except Exception as exc:
-        logger.warning(f"Database initialization skipped/unavailable: {exc}")
-
-    # Defer weaviate init to not block startup
-    import threading
-
-    threading.Thread(target=_init_weaviate, daemon=True).start()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    """Shutdown event handler."""
-    logger.info("Shutting down EquityLens API")
-    if _weaviate_initialized:
-        weaviate_manager.close()
 
 
 @app.get("/health")
