@@ -7,6 +7,8 @@ import {
   Home, Upload, FlaskConical, Eye, FileText, Settings, LogOut, Menu, X, Shield,
   BarChart3, Bell, ChevronRight
 } from 'lucide-react';
+import { NotificationCenter } from './NotificationCenter';
+import { ThemeToggle } from './ThemeToggle';
 
 export const NAV_ITEMS = [
   { path: '/dashboard', label: 'Dashboard', icon: Home },
@@ -88,24 +90,41 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
       <main className="flex-1 overflow-y-auto">
         {/* Mobile Header */}
         <header className="sticky top-0 z-40 flex items-center justify-between p-4 bg-card/80 backdrop-blur-md border-b border-border/30 md:hidden">
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-5 h-5" />
-          </Button>
-          <span className="font-display font-bold">{title || 'EquityLens'}</span>
-          <Avatar className="w-8 h-8">
-            <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(user?.name || 'U')}</AvatarFallback>
-          </Avatar>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-5 h-5" />
+            </Button>
+            <span className="font-display font-bold">{title || 'EquityLens'}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <ThemeToggle className="w-8 h-8" />
+            <NotificationCenter />
+            <Avatar className="w-8 h-8 ml-1">
+              <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(user?.name || 'U')}</AvatarFallback>
+            </Avatar>
+          </div>
         </header>
 
         {/* Page Header */}
-        {(title || subtitle) && (
-          <div className="hidden md:flex items-center justify-between p-6 border-b border-border/20">
-            <div>
-              {title && <h1 className="text-2xl font-display font-bold">{title}</h1>}
-              {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+        <div className="hidden md:flex items-center justify-between p-6 border-b border-border/20">
+          <div>
+            {title && <h1 className="text-2xl font-display font-bold">{title}</h1>}
+            {subtitle && <p className="text-muted-foreground mt-1">{subtitle}</p>}
+          </div>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <NotificationCenter />
+            <div className="flex items-center gap-3 ml-2 pl-4 border-l border-border/20">
+              <div className="text-right">
+                <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                <p className="text-xs text-muted-foreground capitalize">{user?.role || 'analyst'}</p>
+              </div>
+              <Avatar className="w-9 h-9">
+                <AvatarFallback className="bg-primary/10 text-primary">{getInitials(user?.name || 'U')}</AvatarFallback>
+              </Avatar>
             </div>
           </div>
-        )}
+        </div>
 
         <div className="p-4 md:p-6">
           {children}
