@@ -10,6 +10,7 @@ from app.models.audit import AuditRequest, AuditResponse, AuditHistoryResponse
 from app.services.dataset_service import load_dataset_from_file, get_dataset
 from app.services.bias_engine import run_full_audit_pipeline
 from app.services.audit_trail_service import AuditTrailService
+from app.services.bias_drift_service import DriftService
 
 logger = logging.getLogger(__name__)
 
@@ -231,3 +232,31 @@ async def _run_audit_background(
 
     finally:
         db.close()
+
+
+@router.post("/drift/check")
+async def check_audit_drift(
+    dataset_id: str,
+    previous_score: int,
+    current_score: int,
+    threshold: float = 0.05,
+    db: Session = Depends(get_db),
+):
+    """Check if fairness score has drifted between audits."""
+    try:
+        logger.info(
+            f"Checking drift for dataset {dataset_id}: {previous_score} -> {current_score}"
+        )
+
+        result = await DriftService.check_drift(
+            dataset_id=dataset_id,
+            previous_score=previous_score,
+            current_score=current_score,
+            threshold=threshold,
+        )
+
+        return result
+
+    except Exception as e:
+        logger.error(f"Error checking drift: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
