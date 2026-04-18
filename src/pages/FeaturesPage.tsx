@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Eye, Shield, BarChart3, Users, Zap, FileText, Clock, Scale, Brain, ArrowRight, CheckCircle2, Lock, EyeOff, FlaskConical, Globe, Bell, Search, FileCheck, GraduationCap, Sparkles, Star, Heart, Target, ShieldCheck } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppHeader } from '@/components/AppHeader';
 
 const FeaturesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -92,24 +92,7 @@ const FeaturesPage: React.FC = () => {
     <div className="min-h-screen overflow-hidden">
       <div className="fixed inset-0 -z-10 bg-background" />
 
-      {/* Header */}
-      <nav className="container py-6 flex items-center justify-between relative z-10">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm">
-            <Eye className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <ThemeToggle className="rounded-full" />
-          <Link to="/features" className="text-sm text-primary font-medium px-4">Features</Link>
-          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground px-4">About</Link>
-          <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground px-4">Contact</Link>
-          <Link to="/login">
-            <Button variant="outline" className="rounded-full">Sign In</Button>
-          </Link>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Hero */}
       <section className="container py-16 md:py-24 text-center relative z-10">

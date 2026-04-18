@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Eye, Heart, Shield, Scale, Users, ArrowRight, CheckCircle2, Mail, MapPin, Linkedin, Twitter, Github } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppHeader } from '@/components/AppHeader';
 
 const AboutPage: React.FC = () => {
   const values = [
@@ -31,24 +31,7 @@ const AboutPage: React.FC = () => {
     <div className="min-h-screen">
       <div className="fixed inset-0 -z-10 bg-background" />
 
-      {/* Header */}
-      <nav className="container py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm">
-            <Eye className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <ThemeToggle className="rounded-full" />
-          <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link>
-          <Link to="/about" className="text-sm text-primary font-medium">About</Link>
-          <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
-          <Link to="/login">
-            <Button variant="outline" className="rounded-full">Sign In</Button>
-          </Link>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Hero */}
       <section className="container py-16 md:py-24 text-center">

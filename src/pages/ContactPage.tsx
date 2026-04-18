@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, Mail, MapPin, Phone, ArrowRight, CheckCircle2, Send, MessageSquare } from 'lucide-react';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppHeader } from '@/components/AppHeader';
 
 const ContactPage: React.FC = () => {
   const [form, setForm] = useState({
@@ -57,24 +57,7 @@ const ContactPage: React.FC = () => {
     <div className="min-h-screen">
       <div className="fixed inset-0 -z-10 bg-background" />
 
-      {/* Header */}
-      <nav className="container py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm">
-            <Eye className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
-        </Link>
-        <div className="flex items-center gap-4">
-          <ThemeToggle className="rounded-full" />
-          <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link>
-          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
-          <Link to="/contact" className="text-sm text-primary font-medium">Contact</Link>
-          <Link to="/login">
-            <Button variant="outline" className="rounded-full">Sign In</Button>
-          </Link>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Hero */}
       <section className="container py-12 md:py-16 text-center">

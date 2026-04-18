@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Eye, ArrowRight, Shield, BarChart3, Users, Zap, CheckCircle2, Heart, Activity, Scale, Sparkles, Globe, ArrowDown } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AppHeader } from '@/components/AppHeader';
 
 const LandingPage: React.FC = () => {
   const navigate = useNavigate();
@@ -125,27 +126,7 @@ const LandingPage: React.FC = () => {
     <div className="min-h-screen overflow-hidden">
       <div className="fixed inset-0 -z-10 bg-background" />
 
-      {/* Navigation */}
-      <nav className="container py-6 flex items-center justify-between relative z-10">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl gradient-warm flex items-center justify-center shadow-glow animate-pulse-glow">
-            <Eye className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <ThemeToggle className="rounded-full border-border/60" />
-          <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4">Features</Link>
-          <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4">About</Link>
-          <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-4">Contact</Link>
-          <Link to="/login">
-            <Button variant="outline" className="rounded-full border-border/60 hover:bg-primary/5">Sign In</Button>
-          </Link>
-          <Link to="/register">
-            <Button className="rounded-full btn-warm-primary shadow-glow hover:shadow-warm">Get Started</Button>
-          </Link>
-        </div>
-      </nav>
+      <AppHeader />
 
       {/* Hero */}
       <section className="container py-16 md:py-24 relative z-10">
