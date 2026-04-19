@@ -40,7 +40,7 @@ const ContactPage: React.FC = () => {
   const contactInfo = [
     { icon: Mail, title: 'Email', value: 'hello@equitylens.ai', desc: 'General inquiries' },
     { icon: Phone, title: 'Phone', value: '+1 (888) 555-EQLS', desc: 'Mon-Fri 9am-6pm EST' },
-    { icon: MapPin, title: 'Office', value: 'Boston, MA', desc: 'Healthcare innovation hub' },
+    { icon: MapPin, title: 'Office', value: 'Ahmedabad, India', desc: 'Healthcare innovation hub' },
   ];
 
   const topics = [
