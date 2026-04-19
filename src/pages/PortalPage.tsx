@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowRight, CheckCircle2, AlertCircle, Send, Scale, Shield, ClipboardCheck, MessageSquare, Info } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertCircle, CheckCircle2, Info, MessageSquare, Send, Heart, Shield, ArrowRight } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,9 +49,15 @@ interface PortalState {
 
 export default function PortalPage() {
   const [state, setState] = useState<PortalState>({
+    // Warm background
     step: 'input',
     auditId: '',
-    profile: { age: 0, symptom_severity: 0, comorbidity_index: 0, prior_visit_count: 0 },
+    profile: {
+      age: 0,
+      symptom_severity: 0,
+      comorbidity_index: 0,
+      prior_visit_count: 0,
+    },
     explanationResult: null,
     loading: false,
     error: null,
@@ -59,23 +65,39 @@ export default function PortalPage() {
     appealId: null,
   });
 
-  const [appealForm, setAppealForm] = useState({ email: '', reason: '' });
+  const [appealForm, setAppealForm] = useState({
+    email: '',
+    reason: '',
+  });
 
+  // Handle profile input changes
   const handleProfileChange = (field: string, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setState(prev => ({ ...prev, profile: { ...prev.profile, [field]: numValue } }));
+    setState(prev => ({
+      ...prev,
+      profile: { ...prev.profile, [field]: numValue }
+    }));
   };
 
+  // Handle audit ID change
   const handleAuditIdChange = (value: string) => {
     setState(prev => ({ ...prev, auditId: value }));
   };
 
+  // Request explanation
   const handleGetExplanation = async () => {
     if (!state.auditId) {
       setState(prev => ({ ...prev, error: 'Please enter an audit ID' }));
       return;
     }
+
+    if (Object.values(state.profile).every(v => v === 0)) {
+      setState(prev => ({ ...prev, error: 'Please enter at least one profile value' }));
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
       const result = (await ApiClient.portalExplain(state.auditId, state.profile)) as PortalExplanationResult;
       setState(prev => ({
@@ -87,20 +109,33 @@ export default function PortalPage() {
       }));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to get explanation';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+        loading: false,
+      }));
     }
   };
 
+  // Move to appeal form
   const handleStartAppeal = () => {
     setState(prev => ({ ...prev, step: 'appeal', error: null }));
   };
 
+  // Submit appeal
   const handleSubmitAppeal = async () => {
     if (!appealForm.email || !appealForm.reason) {
       setState(prev => ({ ...prev, error: 'Please fill in all appeal fields' }));
       return;
     }
+
+    if (appealForm.reason.length < 50) {
+      setState(prev => ({ ...prev, error: 'Explanation must be at least 50 characters' }));
+      return;
+    }
+
     setState(prev => ({ ...prev, loading: true, error: null }));
+
     try {
       const result = await ApiClient.submitAppeal(state.auditId, appealForm.email, appealForm.reason);
       setState(prev => ({
@@ -112,10 +147,15 @@ export default function PortalPage() {
       }));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to submit appeal';
-      setState(prev => ({ ...prev, error: errorMessage, loading: false }));
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+        loading: false,
+      }));
     }
   };
 
+  // Reset to input
   const handleReset = () => {
     setState(prev => ({
       ...prev,
@@ -131,184 +171,29 @@ export default function PortalPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <div className="fixed inset-0 -z-10 bg-background" />
-      
       {/* Header */}
-      <header className="bg-background/80 backdrop-blur-md border-b border-border/20 sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Scale className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-xl font-display font-bold text-foreground">Appeal Portal</h1>
-              <p className="text-xs text-muted-foreground">Patient Transparency System</p>
-            </div>
+      <div className="bg-background border-b">
+        <div className="max-w-4xl mx-auto px-4 py-8 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Care Decision Appeal Portal</h1>
+            <p className="text-muted-foreground mt-2">
+              Understand your care prioritization decision and appeal if you believe it was unfair
+            </p>
           </div>
-          <ThemeToggle />
+          <ThemeToggle className="rounded-full" />
         </div>
-      </header>
+      </div>
 
-      <main className="max-w-5xl mx-auto px-6 py-12">
-        {/* Step: Input */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Step: Input Profile */}
         {state.step === 'input' && (
-          <div className="grid lg:grid-cols-[1fr_300px] gap-12">
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-3xl font-display font-bold text-foreground mb-4">
-                  Transparency is the foundation of trust.
-                </h2>
-                <p className="text-muted-foreground">
-                  Every care decision is auditable. Enter your profile to reconstruct the logic used in your case.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="auditId">Audit Reference</Label>
-                  <Input
-                    id="auditId"
-                    placeholder="e.g., ADT-90210"
-                    value={state.auditId}
-                    onChange={(e) => handleAuditIdChange(e.target.value)}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="age">Age</Label>
-                    <Input id="age" type="number" value={state.profile.age || ''} onChange={(e) => handleProfileChange('age', e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="symptom_severity">Severity (1-10)</Label>
-                    <Input id="symptom_severity" type="number" value={state.profile.symptom_severity || ''} onChange={(e) => handleProfileChange('symptom_severity', e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="comorbidity_index">Comorbidity</Label>
-                    <Input id="comorbidity_index" type="number" value={state.profile.comorbidity_index || ''} onChange={(e) => handleProfileChange('comorbidity_index', e.target.value)} />
-                  </div>
-                  <div>
-                    <Label htmlFor="prior_visit_count">Prior Visits</Label>
-                    <Input id="prior_visit_count" type="number" value={state.profile.prior_visit_count || ''} onChange={(e) => handleProfileChange('prior_visit_count', e.target.value)} />
-                  </div>
-                </div>
-              </div>
-
-              {state.error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{state.error}</AlertDescription>
-                </Alert>
-              )}
-
-              <Button onClick={handleGetExplanation} disabled={state.loading} className="btn-warm-primary">
-                {state.loading ? 'Processing...' : 'Analyze My Case'} <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </div>
-
-            <aside className="space-y-6">
-              <div className="p-6 bg-card rounded-lg border border-border">
-                <Shield className="w-8 h-8 text-primary mb-4" />
-                <h3 className="font-bold text-foreground mb-2">Privacy Pledge</h3>
-                <p className="text-sm text-muted-foreground">
-                  Fairness Lens operates on Zero-Knowledge principle. We do not use race, gender, or orientation in our models.
-                </p>
-                <div className="flex items-center gap-2 mt-4">
-                  <CheckCircle2 className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-bold">GDPR Compliant</span>
-                </div>
-              </div>
-            </aside>
-          </div>
-        )}
-
-        {/* Step: Explanation */}
-        {state.step === 'explanation' && state.explanationResult && (
-          <div className="space-y-8">
-            <div>
-              <h2 className="text-3xl font-display font-bold">Decision Reconstruction</h2>
-              <p className="text-muted-foreground mt-2">
-                Audit reference: <span className="font-mono">{state.auditId}</span>
-              </p>
-            </div>
-
-            <div className="grid lg:grid-cols-[1fr_280px] gap-8">
-              <div className="space-y-8">
-                <div className="p-6 bg-card rounded-lg border border-border">
-                  <p className="text-xs font-bold text-primary mb-2">Decision Summary</p>
-                  <p className="text-lg text-foreground">{state.explanationResult.decision_summary}</p>
-                </div>
-
-                {state.explanationResult.key_factors && state.explanationResult.key_factors.length > 0 && (
-                  <div>
-                    <h3 className="font-bold mb-4">Contributing Attributes</h3>
-                    <div className="space-y-3">
-                      {state.explanationResult.key_factors.map((factor, idx) => (
-                        <div key={idx} className="p-4 bg-card rounded-lg border border-border">
-                          <div className="flex justify-between mb-2">
-                            <span className="text-xs text-muted-foreground">{factor.feature}</span>
-                            <span className="text-xs font-bold text-primary">{factor.importance}</span>
-                          </div>
-                          <p className="text-sm">Your value: <span className="font-mono">{factor.your_value}</span></p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {state.explanationResult.counterfactual_paths && state.explanationResult.counterfactual_paths.length > 0 && (
-                  <div>
-                    <h3 className="font-bold mb-4">What-If Scenarios</h3>
-                    <div className="space-y-4">
-                      {state.explanationResult.counterfactual_paths.map((cf, idx) => (
-                        <div key={idx} className="p-4 bg-card rounded-lg border-l-4 border-l-primary/40">
-                          <p className="font-medium mb-2">{cf.scenario}</p>
-                          <div className="text-sm text-muted-foreground space-y-1">
-                            {cf.changes.map((change, cidx) => (
-                              <div key={cidx} className="flex items-center gap-2">
-                                <span className="w-1 h-1 rounded-full bg-primary/40" />
-                                {change}
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-3 flex items-center gap-4">
-                            <span className="text-xs font-bold text-primary">{cf.outcome}</span>
-                            <span className="text-xs text-muted-foreground">{cf.feasibility}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <aside className="space-y-6">
-                <div className="p-6 bg-primary text-primary-foreground rounded-lg">
-                  <h3 className="font-bold mb-2">Believe this is wrong?</h3>
-                  <p className="text-sm text-primary-foreground/80 mb-4">
-                    If your medical reality differs, you can file an appeal.
-                  </p>
-                  <Button onClick={handleStartAppeal} className="w-full bg-white text-primary hover:bg-white/90">
-                    Start Formal Appeal
-                  </Button>
-                </div>
-              </aside>
-            </div>
-
-            <Button variant="ghost" onClick={() => setState(prev => ({ ...prev, step: 'input' }))} className="mt-8">
-              Back to Search
-            </Button>
-          </div>
-        )}
-
-        {/* Step: Appeal */}
-        {state.step === 'appeal' && (
           <Card>
             <CardHeader>
-              <CardTitle>File Your Appeal</CardTitle>
+              <CardTitle>Your Profile</CardTitle>
               <CardDescription>
-                Explain why you believe the care decision was unfair. Our review team will examine your case within 3-5 business days.
+                Enter your profile details to receive an explanation of the care decision
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -319,30 +204,291 @@ export default function PortalPage() {
                 </Alert>
               )}
 
-              <div>
-                <Label htmlFor="appeal-email">Your Email</Label>
-                <Input id="appeal-email" type="email" placeholder="your.email@example.com" value={appealForm.email} onChange={(e) => setAppealForm(prev => ({ ...prev, email: e.target.value }))} />
-              </div>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="auditId">Audit ID</Label>
+                  <Input
+                    id="auditId"
+                    placeholder="Enter the audit ID (e.g., audit-123)"
+                    value={state.auditId}
+                    onChange={(e) => handleAuditIdChange(e.target.value)}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    This was provided when your care case was reviewed
+                  </p>
+                </div>
 
-              <div>
-                <Label htmlFor="appeal-reason">Why You're Appealing</Label>
-                <Textarea id="appeal-reason" placeholder="Please explain why you believe the decision was unfair..." value={appealForm.reason} onChange={(e) => setAppealForm(prev => ({ ...prev, reason: e.target.value }))} className="min-h-32" />
-                <p className="text-xs text-muted-foreground mt-1">Minimum 50 characters ({appealForm.reason.length}/50)</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="age">Age</Label>
+                    <Input
+                      id="age"
+                      type="number"
+                      placeholder="Your age"
+                      value={state.profile.age || ''}
+                      onChange={(e) => handleProfileChange('age', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="symptom_severity">Symptom Severity (1-10)</Label>
+                    <Input
+                      id="symptom_severity"
+                      type="number"
+                      placeholder="Current symptom severity"
+                      value={state.profile.symptom_severity || ''}
+                      onChange={(e) => handleProfileChange('symptom_severity', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="comorbidity_index">Comorbidity Index</Label>
+                    <Input
+                      id="comorbidity_index"
+                      type="number"
+                      placeholder="Comorbidity burden score"
+                      value={state.profile.comorbidity_index || ''}
+                      onChange={(e) => handleProfileChange('comorbidity_index', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="prior_visit_count">Prior Visit Count</Label>
+                    <Input
+                      id="prior_visit_count"
+                      type="number"
+                      placeholder="Visits in last 12 months"
+                      value={state.profile.prior_visit_count || ''}
+                      onChange={(e) => handleProfileChange('prior_visit_count', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
               </div>
 
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Appeal Process:</strong> Days 1-2: Receive, Days 3-5: Review, Days 6-7: Escalation if needed, Days 8-10: Decision
+                  We don't collect protected information like race, gender, or religion.
+                  Your explanation is generated without using these attributes.
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={handleGetExplanation}
+                disabled={state.loading}
+                className="w-full"
+                size="lg"
+              >
+                {state.loading ? 'Analyzing...' : 'Get Care Decision Explanation'}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Step: Explanation Display */}
+        {state.step === 'explanation' && state.explanationResult && (
+          <div className="space-y-6">
+            {/* Decision Summary */}
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-900">📋 Decision Summary</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-slate-700">{state.explanationResult.decision_summary}</p>
+              </CardContent>
+            </Card>
+
+            {/* Key Factors */}
+            {state.explanationResult.key_factors && state.explanationResult.key_factors.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">🎯 Key Factors in Your Decision</CardTitle>
+                  <CardDescription>
+                    These features had the strongest influence on the care outcome
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {state.explanationResult.key_factors.map((factor, idx: number) => (
+                      <div key={idx} className="border rounded-lg p-3 bg-slate-50">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-semibold text-slate-900">
+                            {factor.feature?.toUpperCase()}
+                          </span>
+                          <span className="text-sm font-mono bg-amber-100 text-amber-900 px-2 py-1 rounded">
+                            {factor.importance}
+                          </span>
+                        </div>
+                        <p className="text-sm text-slate-600">Your value: {factor.your_value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Bias Risk */}
+            {state.explanationResult.bias_risk_factors && state.explanationResult.bias_risk_factors.length > 0 && (
+              <Card className="bg-orange-50 border-orange-200">
+                <CardHeader>
+                  <CardTitle className="text-orange-900 text-lg">⚠️ Potential Bias Concerns</CardTitle>
+                  <CardDescription className="text-orange-800">
+                    These factors may have unfairly influenced your decision
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {state.explanationResult.bias_risk_factors.map((risk, idx: number) => (
+                      <div key={idx} className="border-l-4 border-orange-400 pl-4 py-2">
+                        <p className="font-semibold text-slate-900">{risk.feature}</p>
+                        <p className="text-sm text-slate-600 mt-1">{risk.note}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Counterfactuals */}
+            {state.explanationResult.counterfactual_paths && state.explanationResult.counterfactual_paths.length > 0 && (
+              <Card className="bg-green-50 border-green-200">
+                <CardHeader>
+                  <CardTitle className="text-green-900 text-lg">✨ What Could Change the Outcome</CardTitle>
+                  <CardDescription className="text-green-800">
+                    Here's what would be different if your profile factors changed
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {state.explanationResult.counterfactual_paths.map((cf, idx: number) => (
+                      <div key={idx} className="border rounded-lg p-4 bg-white">
+                        <p className="font-semibold text-slate-900 mb-2">{cf.scenario}</p>
+                        <ul className="space-y-1 mb-3">
+                          {cf.changes?.map((change: string, cidx: number) => (
+                            <li key={cidx} className="text-sm text-slate-700 flex items-start gap-2">
+                              <span className="text-green-600 mt-0.5">→</span>
+                              {change}
+                            </li>
+                          ))}
+                        </ul>
+                        <div className="flex gap-4">
+                          <span className="text-sm font-semibold text-green-700">
+                            {cf.outcome}
+                          </span>
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                            {cf.feasibility}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Appeal Button */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleStartAppeal}
+                size="lg"
+                className="flex-1"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                File an Appeal
+              </Button>
+              <Button
+                onClick={handleReset}
+                variant="outline"
+                size="lg"
+                className="flex-1"
+              >
+                Check Another Decision
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Appeal Form */}
+        {state.step === 'appeal' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>File Your Appeal</CardTitle>
+              <CardDescription>
+                Explain why you believe the care decision was unfair. Our review team will examine your case
+                within 3-5 business days.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {state.error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{state.error}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="appeal-email">Your Email</Label>
+                  <Input
+                    id="appeal-email"
+                    type="email"
+                    placeholder="your.email@example.com"
+                    value={appealForm.email}
+                    onChange={(e) => setAppealForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    We'll send status updates to this email address
+                  </p>
+                </div>
+
+                <div>
+                  <Label htmlFor="appeal-reason">Why You're Appealing</Label>
+                  <div className="mt-1 flex gap-2">
+                    <Textarea
+                      id="appeal-reason"
+                      placeholder="Please explain why you believe the decision was unfair, including any relevant facts or changes in your circumstances..."
+                      value={appealForm.reason}
+                      onChange={(e) => setAppealForm(prev => ({ ...prev, reason: e.target.value }))}
+                      className="min-h-32"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Minimum 50 characters ({appealForm.reason.length}/50+)
+                  </p>
+                </div>
+              </div>
+
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Our Appeal Process (4 Steps):</strong>
+                  <ul className="list-disc list-inside text-sm mt-2 space-y-1">
+                    <li>Days 1-2: Your appeal received and logged</li>
+                    <li>Days 3-5: Initial review by our analysis team</li>
+                    <li>Days 6-7: Escalation to manager if needed</li>
+                    <li>Days 8-10: Final decision sent to your email</li>
+                  </ul>
                 </AlertDescription>
               </Alert>
 
               <div className="flex gap-3">
-                <Button onClick={handleSubmitAppeal} disabled={state.loading} className="flex-1">
+                <Button
+                  onClick={handleSubmitAppeal}
+                  disabled={state.loading}
+                  className="flex-1"
+                  size="lg"
+                >
                   <Send className="mr-2 h-4 w-4" />
                   {state.loading ? 'Submitting...' : 'Submit Appeal'}
                 </Button>
-                <Button onClick={() => setState(prev => ({ ...prev, step: 'explanation' }))} variant="outline">
+                <Button
+                  onClick={() => setState(prev => ({ ...prev, step: 'explanation' }))}
+                  variant="outline"
+                  size="lg"
+                >
                   Back
                 </Button>
               </div>
@@ -352,34 +498,61 @@ export default function PortalPage() {
 
         {/* Step: Confirmation */}
         {state.step === 'confirmation' && state.appealSubmitted && state.appealId && (
-          <Card>
+          <Card className="bg-green-50 border-green-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-600">
+              <CardTitle className="text-green-900 flex items-center gap-2">
                 <CheckCircle2 className="h-6 w-6" />
                 Appeal Submitted Successfully
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="bg-muted p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">Appeal ID:</p>
-                <p className="font-mono text-sm font-bold">{state.appealId}</p>
+              <div className="bg-white border rounded-lg p-4">
+                <p className="text-sm text-slate-600 mb-2">Appeal ID (for reference):</p>
+                <p className="font-mono text-sm font-semibold text-slate-900">{state.appealId}</p>
               </div>
 
-              <div>
-                <p className="font-bold mb-3">Next Steps:</p>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Confirmation email sent to {appealForm.email}</li>
-                  <li className="flex items-center gap-2"><span>1</span> Our review team will examine (3-5 days)</li>
-                  <li className="flex items-center gap-2"><span>2</span> Escalation if needed</li>
-                  <li className="flex items-center gap-2"><span>3</span> Final decision via email</li>
+              <div className="space-y-3">
+                <p className="font-semibold text-slate-900">📧 Next Steps:</p>
+                <ul className="space-y-2 text-sm text-slate-700">
+                  <li className="flex items-start gap-2">
+                    <span className="text-green-600 font-bold mt-0.5">✓</span>
+                    Confirmation email sent to {appealForm.email}
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">1</span>
+                    Our review team will examine your case (3-5 business days)
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">2</span>
+                    If needed, escalation to management for further review
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-blue-600 font-bold mt-0.5">3</span>
+                    Final decision communication via email
+                  </li>
                 </ul>
               </div>
 
-              <Button onClick={handleReset} className="w-full">Check Another Decision</Button>
+              <Alert>
+                <Info className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Questions?</strong> Contact our appeals team at{' '}
+                  <span className="font-semibold">appeals@fairness-lens.io</span>
+                  {' '}(Monday-Friday, 9 AM - 5 PM EST)
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                onClick={handleReset}
+                className="w-full"
+                size="lg"
+              >
+                Check Another Decision
+              </Button>
             </CardContent>
           </Card>
         )}
-      </main>
+      </div>
     </div>
   );
 }
