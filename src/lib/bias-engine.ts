@@ -1,4 +1,4 @@
-import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, FeatureImportance, Correlation, SimulationScenario, MitigationStrategy } from './types';
+import type { Dataset, BiasAnalysis, FairnessMetrics, GroupMetric, FeatureImportance, Correlation, SimulationScenario, MitigationStrategy, IntersectionalResult } from './types';
 
 function getUniqueValues(data: Record<string, unknown>[], col: string): string[] {
   return [...new Set(data.map(r => String(r[col])))].filter(Boolean);
