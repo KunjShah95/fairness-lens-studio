@@ -8,16 +8,6 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind-3.4%2B-000000.svg?style=for-the-badge)](https://tailwindcss.com/)
 [![Design](https://img.shields.io/badge/Design-Obsidian_Void-000000.svg?style=for-the-badge)](https://equitylens.ai)
 
----
-
-## 🏛️ Vision & Leadership
-
-EquityLens was founded to bridge the gap between algorithmic complexity and human accountability in healthcare. We believe that AI should not only be powerful but also demonstrably fair and transparent.
-
-| Founder | Role | Expertise |
-| :--- | :--- | :--- |
-| **Kunj Shah** | Founder | Full Stack Architecture, AI/ML System Integrity |
-| **Vidhya Mehta** | Co-founder | Python, AI/ML Architectures, Causal Fairness |
 
 ---
 
