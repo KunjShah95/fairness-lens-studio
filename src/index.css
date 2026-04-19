@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:opsz,wght@9..144,400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,132 +6,72 @@
 
 @layer base {
   :root {
-    /* Refined Warm Palette - "Editorial Cream" */
-    --background: 35 30% 98%;
-    --foreground: 25 20% 12%;
-
-    --card: 35 25% 96%;
-    --card-foreground: 25 20% 12%;
-
-    --popover: 35 25% 96%;
-    --popover-foreground: 25 20% 12%;
-
-    --primary: 25 15% 15%; /* Solid dark for text/primary actions */
-    --primary-foreground: 35 30% 98%;
-
-    --secondary: 18 55% 52%; /* Terra Cotta accent */
-    --secondary-foreground: 35 30% 98%;
-
-    --muted: 35 15% 92%;
+    /* Warm Terracotta Theme */
+    --background: 35 18% 95%;
+    --foreground: 25 15% 22%;
+    --card: 0 0% 100%;
+    --card-foreground: 25 15% 22%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 25 15% 22%;
+    /* Primary = Terracotta */
+    --primary: 18 55% 52%;
+    --primary-foreground: 35 18% 95%;
+    /* Secondary = Sage */
+    --secondary: 155 25% 45%;
+    --secondary-foreground: 35 18% 95%;
+    --muted: 35 12% 90%;
     --muted-foreground: 25 10% 45%;
-
-    --accent: 35 20% 94%;
-    --accent-foreground: 25 20% 12%;
-
-    --destructive: 0 60% 45%;
-    --destructive-foreground: 35 30% 98%;
-
-    --border: 25 15% 90%;
-    --input: 25 15% 90%;
-    --ring: 25 15% 15%;
-
-    --radius: 0.5rem;
-
-    /* Professional Shadows - Minimal */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
-    
-    /* Editorial Tokens */
-    --hairline: 25 15% 12% / 0.08;
+    --accent: 28 45% 58%;
+    --accent-foreground: 25 15% 22%;
+    --destructive: 0 60% 48%;
+    --destructive-foreground: 35 18% 95%;
+    --border: 35 15% 80%;
+    --input: 35 15% 80%;
+    --ring: 18 55% 52%;
+    --radius: 8px;
   }
 
   .dark {
-    --background: 25 15% 8%;
-    --foreground: 35 20% 94%;
-    --card: 25 15% 10%;
-    --card-foreground: 35 20% 94%;
-    --popover: 25 15% 10%;
-    --popover-foreground: 35 20% 94%;
-    --primary: 35 30% 98%;
-    --primary-foreground: 25 15% 8%;
-    --secondary: 18 50% 60%;
-    --secondary-foreground: 25 15% 8%;
-    --muted: 25 15% 15%;
+    --background: 25 12% 12%;
+    --foreground: 35 15% 94%;
+    --card: 25 12% 15%;
+    --card-foreground: 35 15% 94%;
+    --popover: 25 12% 15%;
+    --popover-foreground: 35 15% 94%;
+    --primary: 18 55% 60%;
+    --primary-foreground: 25 12% 12%;
+    --secondary: 155 25% 52%;
+    --secondary-foreground: 25 12% 12%;
+    --muted: 25 12% 18%;
     --muted-foreground: 35 10% 70%;
-    --accent: 25 15% 12%;
-    --accent-foreground: 35 20% 94%;
-    --border: 25 15% 18%;
-    --input: 25 15% 18%;
-    --ring: 35 30% 98%;
-    --hairline: 35 20% 94% / 0.1;
+    --accent: 28 45% 58%;
+    --accent-foreground: 25 12% 12%;
+    --destructive: 0 55% 48%;
+    --destructive-foreground: 35 15% 94%;
+    --border: 25 12% 22%;
+    --input: 25 12% 22%;
+    --ring: 18 55% 60%;
   }
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-secondary/20 selection:text-foreground;
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-serif font-bold tracking-tight;
-  }
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground font-sans; }
+  h1, h2, h3, h4, h5, h6 { @apply font-display font-semibold; }
 }
 
 @layer components {
-  .btn-editorial {
-    @apply inline-flex items-center justify-center rounded-none border border-primary px-8 py-3 text-sm font-medium uppercase tracking-widest transition-all duration-300 hover:bg-primary hover:text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
+  .btn-warm-primary {
+    @apply rounded-lg px-5 py-2.5 font-medium transition-all duration-200;
+    background: var(--primary);
+    color: var(--primary-foreground);
   }
-  
-  .btn-editorial-secondary {
-    @apply inline-flex items-center justify-center rounded-none border border-secondary/40 px-8 py-3 text-sm font-medium uppercase tracking-widest transition-all duration-300 hover:bg-secondary hover:text-secondary-foreground hover:border-secondary;
-  }
-
-  .card-editorial {
-    @apply bg-card border border-border p-8 transition-all duration-500 hover:border-foreground/20;
-  }
-
-  .hairline-v {
-    @apply absolute top-0 bottom-0 w-[1px] bg-[hsl(var(--hairline))];
-  }
-  
-  .hairline-h {
-    @apply w-full h-[1px] bg-[hsl(var(--hairline))];
-  }
-
-  .section-number {
-    @apply text-[10px] font-mono tracking-[0.3em] uppercase text-foreground/40;
+  .btn-warm-primary:hover {
+    opacity: 0.9;
   }
 }
 
 @layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-  
-  .grid-editorial {
-    display: grid;
-    grid-template-columns: repeat(12, 1fr);
-    gap: 1.5rem;
-  }
-
-  .bg-noise {
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3%3Ffilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.015;
-    pointer-events: none;
-  }
+  .gradient-warm { background: var(--primary); }
+  .text-gradient { color: var(--primary); }
 }
-
-/* Page Transitions */
-.page-enter {
-  opacity: 0;
-  transform: translateY(10px);
-}
-.page-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 500ms, transform 500ms;
-}
-

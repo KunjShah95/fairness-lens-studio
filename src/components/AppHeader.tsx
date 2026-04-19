@@ -45,34 +45,34 @@ export const AppHeader: React.FC = () => {
 
   const HeaderLogo = () => (
     <Link to="/" className="flex items-center gap-3 group">
-      <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm group-hover:scale-110 transition-transform">
-        <Shield className="w-5 h-5 text-primary-foreground" />
+      <div className="w-10 h-10 border border-primary flex items-center justify-center transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+        <Shield className="w-5 h-5" />
       </div>
-      <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
+      <span className="text-lg font-serif font-bold uppercase tracking-tighter text-foreground">EquityLens</span>
     </Link>
   );
 
   return (
     <header className={cn(
-      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-      isScrolled || mobileOpen ? "bg-background/95 backdrop-blur-lg border-b border-border/20 shadow-sm" : "bg-transparent",
-      isDashboardRoute && "relative bg-card/80 backdrop-blur-md border-b border-border/50 sticky"
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+      isScrolled || mobileOpen ? "bg-background border-b border-border/50" : "bg-transparent",
+      isDashboardRoute && "relative bg-background border-b border-border sticky"
     )}>
       <div className={cn(
-        "container flex items-center justify-between transition-all duration-300",
+        "container flex items-center justify-between transition-all duration-500",
         isDashboardRoute ? "h-16" : (isScrolled ? "h-16" : "h-24")
       )}>
         <HeaderLogo />
 
         {/* Desktop Navigation */}
         {!isDashboardRoute && (
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex items-center gap-10">
             {publicNav.map(item => (
               <Link 
                 key={item.path} 
                 to={item.path} 
                 className={cn(
-                  "text-sm font-medium transition-colors hover:text-primary",
+                  "text-[11px] font-bold uppercase tracking-[0.2em] transition-colors hover:text-secondary",
                   location.pathname === item.path ? "text-primary" : "text-muted-foreground"
                 )}
               >
@@ -83,7 +83,7 @@ export const AppHeader: React.FC = () => {
         )}
 
         {isDashboardRoute && (
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-2">
             {navItems.map(item => {
               const Icon = item.icon;
               return (
@@ -91,9 +91,9 @@ export const AppHeader: React.FC = () => {
                   <Button
                     variant={location.pathname === item.path ? 'secondary' : 'ghost'}
                     size="sm"
-                    className="gap-2 rounded-full"
+                    className="gap-2 rounded-none px-4 h-9 uppercase text-[10px] font-bold tracking-widest"
                   >
-                    {Icon && <Icon className="w-4 h-4" />}
+                    {Icon && <Icon className="w-3.5 h-3.5" />}
                     {item.label}
                   </Button>
                 </Link>
@@ -103,38 +103,38 @@ export const AppHeader: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 md:gap-4">
-          <ThemeToggle className="rounded-full" />
+        <div className="flex items-center gap-2 md:gap-6">
+          <ThemeToggle className="rounded-none hover:bg-muted" />
           
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-6">
             {isDashboardRoute && <NotificationCenter />}
             
             {user ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-6">
                 {!isDashboardRoute && (
                   <Link to="/dashboard">
-                    <Button className="rounded-full px-6 shadow-glow">Dashboard</Button>
+                    <Button className="rounded-none px-6 h-10 uppercase text-[11px] font-bold tracking-widest">Dashboard</Button>
                   </Link>
                 )}
                 {isDashboardRoute && (
                   <>
-                    <span className="text-sm text-muted-foreground">
-                      {user.name}{' '}
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">{user.role}</span>
-                    </span>
-                    <Button variant="ghost" size="sm" onClick={() => { logout(); window.location.href = '/'; }}>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[11px] font-bold uppercase tracking-wider">{user.name}</span>
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-[0.2em]">{user.role}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="rounded-none h-10 w-10 p-0" onClick={() => { logout(); window.location.href = '/'; }}>
                       <LogOut className="w-4 h-4" />
                     </Button>
                   </>
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <Link to="/login">
-                  <Button variant="ghost" className="rounded-full px-6">Sign In</Button>
+                  <Button variant="ghost" className="rounded-none px-4 h-10 uppercase text-[11px] font-bold tracking-widest">Sign In</Button>
                 </Link>
                 <Link to="/register">
-                  <Button className="rounded-full px-6 shadow-glow">Get Started</Button>
+                  <Button className="rounded-none px-6 h-10 uppercase text-[11px] font-bold tracking-widest bg-primary text-primary-foreground">Get Started</Button>
                 </Link>
               </div>
             )}
