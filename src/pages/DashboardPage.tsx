@@ -81,45 +81,47 @@ const DashboardPage: React.FC = () => {
 
   return (
     <DashboardLayout title="Dashboard" subtitle="Overview of your fairness audits and model performance">
-      <div className="space-y-6 max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-foreground">
+      <div className="space-y-6 max-w-7xl mx-auto px-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground tracking-tight">
               Welcome back, {user?.name?.split(' ')[0] || 'User'}
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Here's your fairness overview
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
+              Here's your model fairness intelligence overview
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="rounded-full gap-2" onClick={() => navigate('/transparency')}>
-              <FileText className="w-4 h-4" /> View Report
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <Button variant="outline" className="rounded-full gap-2 h-11 sm:h-10" onClick={() => navigate('/transparency')}>
+              <FileText className="w-4 h-4" /> View Audit Report
             </Button>
-            <Button className="rounded-full btn-warm-primary gap-2" onClick={() => navigate('/upload')}>
-              <Plus className="w-4 h-4" /> New Audit
+            <Button className="rounded-full btn-warm-primary gap-2 h-11 sm:h-10 shadow-glow" onClick={() => navigate('/upload')}>
+              <Plus className="w-4 h-4" /> New Fairness Audit
             </Button>
           </div>
         </div>
 
         {/* Quick Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Fairness Score', value: score, icon: Shield, color: score >= 80 ? 'text-success' : score >= 60 ? 'text-warning' : 'text-destructive', trend: '+5%', trendUp: true },
-            { label: 'Datasets', value: datasets.length || 3, icon: Database, color: 'text-primary', trend: '+1', trendUp: true },
+            { label: 'Datasets Audit', value: datasets.length || 3, icon: Database, color: 'text-primary', trend: '+1', trendUp: true },
             { label: 'Total Records', value: currentDataset?.rows || 12540, icon: Users, color: 'text-secondary', trend: '+2.1K', trendUp: true },
             { label: 'Bias Alerts', value: displayAlerts.filter(a => a.type === 'warning').length, icon: AlertTriangle, color: 'text-warning', trend: '-2', trendUp: false },
           ].map(stat => (
-            <Card key={stat.label} className="card-warm border-border/20">
-              <CardContent className="p-4">
+            <Card key={stat.label} className="card-warm border-border/20 group hover:border-primary/30 transition-all">
+              <CardContent className="p-5">
                 <div className="flex items-center justify-between">
-                  <stat.icon className={`w-5 h-5 ${stat.color}`} />
-                  <Badge variant={stat.trendUp ? 'secondary' : 'destructive'} className="text-xs">
-                    {stat.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                  <div className={`p-2 rounded-lg bg-background/50 border border-border/10 group-hover:scale-110 transition-transform`}>
+                    <stat.icon className={`w-5 h-5 ${stat.color}`} />
+                  </div>
+                  <Badge variant={stat.trendUp ? 'secondary' : 'destructive'} className="text-[10px] h-5">
+                    {stat.trendUp ? <TrendingUp className="w-3 h-3 mr-0.5" /> : <TrendingDown className="w-3 h-3 mr-0.5" />}
                     {stat.trend}
                   </Badge>
                 </div>
-                <p className="text-2xl font-display font-bold mt-2">{stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-3xl font-display font-bold mt-4 tracking-tight">{stat.value}</p>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
               </CardContent>
             </Card>
           ))}

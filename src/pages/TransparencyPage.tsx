@@ -98,37 +98,37 @@ const TransparencyPage: React.FC = () => {
               </div>
 
               {/* Metrics Summary */}
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-4 rounded-xl bg-card/50">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="text-center p-4 rounded-xl bg-card/50 border border-border/5">
                   <p className="text-2xl font-display font-bold text-primary">{currentAnalysis?.metrics.demographicParity.toFixed(2) || '0.78'}</p>
-                  <p className="text-xs text-muted-foreground">Demographic Parity</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Demographic Parity</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-card/50">
+                <div className="text-center p-4 rounded-xl bg-card/50 border border-border/5">
                   <p className="text-2xl font-display font-bold text-primary">{currentAnalysis?.metrics.equalOpportunity.toFixed(2) || '0.82'}</p>
-                  <p className="text-xs text-muted-foreground">Equal Opportunity</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Equal Opportunity</p>
                 </div>
-                <div className="text-center p-4 rounded-xl bg-card/50">
+                <div className="text-center p-4 rounded-xl bg-card/50 border border-border/5">
                   <p className="text-2xl font-display font-bold text-primary">{currentAnalysis?.metrics.disparateImpact.toFixed(2) || '0.75'}</p>
-                  <p className="text-xs text-muted-foreground">Disparate Impact</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold">Disparate Impact</p>
                 </div>
               </div>
 
               {/* Sensitive Attributes */}
-              <div className="p-4 rounded-xl bg-card/50">
-                <p className="text-sm font-medium mb-2">Audited Attributes</p>
+              <div className="p-4 rounded-xl bg-card/50 border border-border/5">
+                <p className="text-sm font-medium mb-3">Audited Attributes</p>
                 <div className="flex flex-wrap gap-2">
                   {(currentDataset?.sensitiveAttributes || ['gender', 'age_group']).map((attr, i) => (
-                    <Badge key={i} variant="outline">{attr}</Badge>
+                    <Badge key={i} variant="outline" className="bg-background/50">{attr}</Badge>
                   ))}
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 rounded-xl" onClick={handleCopyLink}>
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                <Button variant="outline" className="flex-1 rounded-xl h-11" onClick={handleCopyLink}>
                   <Copy className="w-4 h-4 mr-2" /> Copy Link
                 </Button>
-                <Button className="flex-1 rounded-xl btn-warm-primary" onClick={handleDownloadReport} disabled={reportGenerating}>
+                <Button className="flex-1 rounded-xl btn-warm-primary h-11 shadow-glow" onClick={handleDownloadReport} disabled={reportGenerating}>
                   {reportGenerating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</> : <><Download className="w-4 h-4 mr-2" /> Download PDF</>}
                 </Button>
               </div>

@@ -44,27 +44,27 @@ const AboutPage: React.FC = () => {
       <AppHeader />
 
       {/* Hero */}
-      <section className="container py-16 md:py-24 text-center">
+      <section className="container px-4 py-16 md:py-24 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 shadow-card mb-8">
           <CheckCircle2 className="w-4 h-4 text-success" />
-          <span className="text-sm font-medium text-muted-foreground">About EquityLens</span>
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground">About EquityLens</span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-6">
-          Building Trust in <span className="text-primary">Healthcare AI</span>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-6 leading-tight">
+          Building Trust in <br className="hidden sm:block" /> <span className="text-primary">Healthcare AI</span>
         </h1>
 
-        <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
           We're on a mission to make AI-assisted healthcare decisions fair, explainable, and accountable — for data scientists, compliance teams, and the patients they serve.
         </p>
       </section>
 
       {/* Mission Statement */}
-      <section className="container py-12">
-        <Card className="card-warm border-border/30 max-w-3xl mx-auto">
-          <CardContent className="p-8 md:p-12 text-center">
+      <section className="container px-4 py-12">
+        <Card className="card-warm border-border/30 max-w-3xl mx-auto overflow-hidden">
+          <CardContent className="p-6 sm:p-8 md:p-12 text-center">
             <h2 className="text-2xl font-display font-bold text-foreground mb-4">Our Mission</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed italic">
               "To ensure every patient receives fair treatment from AI-assisted healthcare decisions — regardless of their race, gender, age, or background. We believe fairness is not a feature, but a fundamental right."
             </p>
           </CardContent>
@@ -72,17 +72,17 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* Values */}
-      <section className="container py-16">
-        <h2 className="text-3xl font-display font-bold text-center text-foreground mb-12">Our Values</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="container px-4 py-16">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold text-center text-foreground mb-12">Our Values</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {values.map(v => (
-            <Card key={v.title} className="card-warm border-border/30 text-center">
+            <Card key={v.title} className="card-warm border-border/30 text-center group hover:border-primary/30 transition-all">
               <CardContent className="p-6">
-                <div className="w-14 h-14 rounded-2xl gradient-warm flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 rounded-2xl gradient-warm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   <v.icon className="w-7 h-7 text-primary-foreground" />
                 </div>
                 <h3 className="font-display font-semibold text-foreground mb-2">{v.title}</h3>
-                <p className="text-sm text-muted-foreground">{v.desc}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{v.desc}</p>
               </CardContent>
             </Card>
           ))}
@@ -109,17 +109,17 @@ const AboutPage: React.FC = () => {
       </section>
 
       {/* Team */}
-      <section className="container py-16">
-        <h2 className="text-3xl font-display font-bold text-center text-foreground mb-4">Our Team</h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
-          A multidisciplinary team of healthcare AI researchers,engineers, and policy experts.
+      <section className="container px-4 py-16">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold text-center text-foreground mb-4">Our Team</h2>
+        <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto text-sm sm:text-base">
+          A multidisciplinary team of healthcare AI researchers, engineers, and policy experts.
         </p>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl mx-auto">
           {team.map(member => (
-            <Card key={member.name} className="card-warm-hover border-border/30">
+            <Card key={member.name} className="card-warm-hover border-border/30 overflow-hidden">
               <CardContent className="p-6 text-center">
-                <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden border-2 border-primary/20">
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 overflow-hidden border-2 border-primary/20 shadow-lg">
                   {member.image.startsWith('/') ? (
                     <img 
                       src={member.image} 
@@ -131,12 +131,12 @@ const AboutPage: React.FC = () => {
                     <span className="text-2xl font-display font-bold text-primary">{member.image}</span>
                   )}
                 </div>
-                <h3 className="font-display font-semibold text-foreground">{member.name}</h3>
-                <p className="text-sm text-primary mb-2">{member.role}</p>
-                <p className="text-xs text-muted-foreground">{member.bio}</p>
-                <div className="flex items-center justify-center gap-3 mt-4">
-                  <Linkedin className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
-                  <Twitter className="w-4 h-4 text-muted-foreground cursor-pointer hover:text-foreground" />
+                <h3 className="font-display font-semibold text-foreground text-lg">{member.name}</h3>
+                <p className="text-sm font-bold text-primary mb-2 uppercase tracking-wider">{member.role}</p>
+                <p className="text-sm text-muted-foreground leading-relaxed">{member.bio}</p>
+                <div className="flex items-center justify-center gap-4 mt-6">
+                  <Linkedin className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
+                  <Twitter className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
                 </div>
               </CardContent>
             </Card>

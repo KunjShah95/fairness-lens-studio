@@ -60,22 +60,22 @@ const ContactPage: React.FC = () => {
       <AppHeader />
 
       {/* Hero */}
-      <section className="container py-12 md:py-16 text-center">
+      <section className="container px-4 py-12 md:py-16 text-center">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card border border-border/50 shadow-card mb-6">
           <MessageSquare className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-muted-foreground">Get in Touch</span>
+          <span className="text-xs sm:text-sm font-medium text-muted-foreground">Get in Touch</span>
         </div>
 
-        <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground mb-4">
-          We'd Love to <span className="text-primary">Hear From You</span>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-foreground mb-4 leading-tight">
+          We'd Love to <br className="hidden sm:block" /> <span className="text-primary">Hear From You</span>
         </h1>
 
-        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+        <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
           Questions about fairness? Need a demo? Want to partner? We're here to help.
         </p>
       </section>
 
-      <div className="container py-8">
+      <div className="container px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Contact Form */}
           <div className="lg:col-span-2">

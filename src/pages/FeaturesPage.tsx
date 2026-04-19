@@ -95,44 +95,44 @@ const FeaturesPage: React.FC = () => {
       <AppHeader />
 
       {/* Hero */}
-      <section className="container py-16 md:py-24 text-center relative z-10">
+      <section className="container px-4 py-16 md:py-24 text-center relative z-10">
         <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full glass border border-primary/10 shadow-glass mb-8">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-foreground">Platform Features</span>
+          <span className="text-xs sm:text-sm font-medium text-foreground">Platform Features</span>
         </div>
 
-        <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">
+        <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6 leading-tight">
           Fairness, <span className="text-gradient">Automated</span>
         </h1>
 
-        <p className="text-xl text-foreground/80 mb-10 max-w-2xl mx-auto">
+        <p className="text-lg sm:text-xl text-foreground/80 mb-10 max-w-2xl mx-auto leading-relaxed">
           Everything you need to detect, explain, and mitigate bias in AI-assisted healthcare decisions.
         </p>
 
-        <div className="flex items-center justify-center gap-4">
-          <Link to="/register">
-            <Button className="rounded-full btn-warm-primary shadow-glow hover:-translate-y-1">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <Link to="/register" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto rounded-full btn-warm-primary shadow-glow hover:-translate-y-1">
               Start Free Trial <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </Link>
-          <Button variant="outline" className="rounded-full bg-card/60 backdrop-blur">
+          <Button variant="outline" className="w-full sm:w-auto rounded-full bg-card/60 backdrop-blur">
             Watch Demo
           </Button>
         </div>
       </section>
 
       {/* Benefits Grid */}
-      <section className="container py-12 relative z-10">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="container px-4 py-12 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {benefits.map(b => (
-            <Card key={b.title} className="card-glass">
+            <Card key={b.title} className="card-glass hover:bg-white/5 transition-colors">
               <CardContent className="p-5 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                   <b.icon className="w-5 h-5 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-display font-semibold text-foreground text-sm">{b.title}</h3>
-                  <p className="text-xs text-muted-foreground">{b.desc}</p>
+                  <p className="text-xs text-muted-foreground leading-tight">{b.desc}</p>
                 </div>
               </CardContent>
             </Card>
@@ -141,25 +141,25 @@ const FeaturesPage: React.FC = () => {
       </section>
 
       {/* Features Grid */}
-      <section className="container py-16 relative z-10">
-        <h2 className="text-3xl font-display font-bold text-center text-foreground mb-4">Core Capabilities</h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
+      <section className="container px-4 py-16 relative z-10">
+        <h2 className="text-2xl sm:text-3xl font-display font-bold text-center text-foreground mb-4">Core Capabilities</h2>
+        <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto text-sm sm:text-base">
           A complete fairness platform for healthcare AI teams.
         </p>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map(f => (
-            <Card key={f.title} className="card-warm-hover border border-border/30">
+            <Card key={f.title} className="card-warm-hover border border-border/30 group">
               <CardContent className="p-6">
-                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.accent} flex items-center justify-center mb-4`}>
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${f.accent} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
                   <f.icon className="w-6 h-6 text-primary" />
                 </div>
                 <h3 className="font-display font-semibold text-foreground mb-2">{f.title}</h3>
-                <p className="text-sm text-muted-foreground mb-3">{f.description}</p>
-                <ul className="space-y-1.5">
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{f.description}</p>
+                <ul className="space-y-2">
                   {f.details.map(d => (
-                    <li key={d} className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3 h-3 text-success shrink-0" /> {d}
+                    <li key={d} className="text-[11px] text-muted-foreground flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" /> {d}
                     </li>
                   ))}
                 </ul>
@@ -170,19 +170,21 @@ const FeaturesPage: React.FC = () => {
       </section>
 
       {/* Metrics */}
-      <section className="container py-16 relative z-10">
-        <Card className="card-glass">
-          <CardContent className="p-8 md:p-12">
+      <section className="container px-4 py-16 relative z-10">
+        <Card className="card-glass overflow-hidden">
+          <CardContent className="p-6 sm:p-12">
             <h2 className="text-2xl font-display font-bold text-center text-foreground mb-10">Fairness Metrics We Track</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {metrics.map(m => (
-                <div key={m.name} className="p-5 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30 text-center">
+                <div key={m.name} className="p-5 rounded-xl bg-card/60 backdrop-blur-sm border border-border/30 text-center hover:border-primary/30 transition-colors">
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
                     <m.icon className="w-6 h-6 text-primary" />
                   </div>
                   <h3 className="font-display font-semibold text-foreground mb-1">{m.name}</h3>
-                  <p className="text-xs text-muted-foreground mb-2">{m.description}</p>
-                  <p className="text-sm font-bold text-primary">Threshold: {m.threshold}</p>
+                  <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{m.description}</p>
+                  <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-[10px] font-bold text-primary uppercase tracking-wider">
+                    Threshold: {m.threshold}
+                  </div>
                 </div>
               ))}
             </div>

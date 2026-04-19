@@ -101,23 +101,25 @@ const RegisterPage: React.FC = () => {
       <div className="fixed inset-0 -z-10 bg-background" />
 
       {/* Header */}
-      <nav className="container py-6 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm">
-            <Eye className="w-5 h-5 text-primary-foreground" />
+      <nav className="container px-4 py-6 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl gradient-warm flex items-center justify-center shadow-warm shrink-0">
+            <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-primary-foreground" />
           </div>
-          <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
+          <span className="text-lg sm:text-xl font-display font-bold text-foreground">EquityLens</span>
         </Link>
-        <div className="flex items-center gap-4">
-          <ThemeToggle className="rounded-full" />
-          <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link>
-          <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
-          <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
+        <div className="flex items-center gap-3 sm:gap-4">
+          <ThemeToggle className="rounded-full h-8 w-8 sm:h-10 sm:w-10" />
+          <div className="hidden md:flex items-center gap-4">
+            <Link to="/features" className="text-sm text-muted-foreground hover:text-foreground">Features</Link>
+            <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground">About</Link>
+            <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground">Contact</Link>
+          </div>
         </div>
       </nav>
 
       {/* Register Form */}
-      <div className="container max-w-lg py-8">
+      <div className="container px-4 max-w-lg py-8">
         <Card className="card-warm border-border/30">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-display">Create Account</CardTitle>

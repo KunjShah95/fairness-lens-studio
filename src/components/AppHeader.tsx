@@ -7,7 +7,13 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { cn } from '@/lib/utils';
 
-const navItems = [
+interface NavItem {
+  path: string;
+  label: string;
+  icon?: any;
+}
+
+const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
   { path: '/upload', label: 'Upload', icon: Upload },
   { path: '/analysis', label: 'Analysis', icon: FlaskConical },
@@ -16,7 +22,7 @@ const navItems = [
   { path: '/settings', label: 'Settings', icon: Settings },
 ];
 
-const publicNav = [
+const publicNav: NavItem[] = [
   { path: '/features', label: 'Features' },
   { path: '/about', label: 'About' },
   { path: '/contact', label: 'Contact' },
@@ -34,111 +40,178 @@ export const AppHeader: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isPublicRoute = ['/', '/features', '/about', '/contact'].includes(location.pathname);
-  const isDashboardRoute = location.pathname.startsWith('/dashboard') || 
-                           location.pathname.startsWith('/upload') || 
-                           location.pathname.startsWith('/analysis') ||
-                           location.pathname.startsWith('/transparency') ||
-                           location.pathname.startsWith('/settings');
+  const isPublicRoute = ['/', '/features', '/about', '/contact', '/login', '/register'].includes(location.pathname);
+  const isDashboardRoute = !isPublicRoute;
 
-  if (isPublicRoute) {
-    return (
-      <header className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4",
-        isScrolled ? "bg-background/80 backdrop-blur-lg border-b border-border/20 shadow-sm" : "bg-transparent"
+  const HeaderLogo = () => (
+    <Link to="/" className="flex items-center gap-3 group">
+      <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm group-hover:scale-110 transition-transform">
+        <Shield className="w-5 h-5 text-primary-foreground" />
+      </div>
+      <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
+    </Link>
+  );
+
+  return (
+    <header className={cn(
+      "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
+      isScrolled || mobileOpen ? "bg-background/95 backdrop-blur-lg border-b border-border/20 shadow-sm" : "bg-transparent",
+      isDashboardRoute && "relative bg-card/80 backdrop-blur-md border-b border-border/50 sticky"
+    )}>
+      <div className={cn(
+        "container flex items-center justify-between transition-all duration-300",
+        isDashboardRoute ? "h-16" : (isScrolled ? "h-16" : "h-24")
       )}>
-        <div className="container flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-2xl gradient-warm flex items-center justify-center shadow-warm group-hover:scale-110 transition-transform">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-display font-bold text-foreground">EquityLens</span>
-            </Link>
+        <HeaderLogo />
 
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/features" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Features</Link>
-              <Link to="/about" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">About</Link>
-              <Link to="/contact" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Contact</Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <ThemeToggle className="rounded-full" />
-            {user ? (
-              <Link to="/dashboard">
-                <Button className="rounded-full px-6">Dashboard</Button>
+        {/* Desktop Navigation */}
+        {!isDashboardRoute && (
+          <nav className="hidden md:flex items-center gap-8">
+            {publicNav.map(item => (
+              <Link 
+                key={item.path} 
+                to={item.path} 
+                className={cn(
+                  "text-sm font-medium transition-colors hover:text-primary",
+                  location.pathname === item.path ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                {item.label}
               </Link>
+            ))}
+          </nav>
+        )}
+
+        {isDashboardRoute && (
+          <nav className="hidden md:flex items-center gap-1">
+            {navItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <Link key={item.path} to={item.path}>
+                  <Button
+                    variant={location.pathname === item.path ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="gap-2 rounded-full"
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    {item.label}
+                  </Button>
+                </Link>
+              );
+            })}
+          </nav>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 md:gap-4">
+          <ThemeToggle className="rounded-full" />
+          
+          <div className="hidden md:flex items-center gap-4">
+            {isDashboardRoute && <NotificationCenter />}
+            
+            {user ? (
+              <div className="flex items-center gap-4">
+                {!isDashboardRoute && (
+                  <Link to="/dashboard">
+                    <Button className="rounded-full px-6 shadow-glow">Dashboard</Button>
+                  </Link>
+                )}
+                {isDashboardRoute && (
+                  <>
+                    <span className="text-sm text-muted-foreground">
+                      {user.name}{' '}
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">{user.role}</span>
+                    </span>
+                    <Button variant="ghost" size="sm" onClick={() => { logout(); window.location.href = '/'; }}>
+                      <LogOut className="w-4 h-4" />
+                    </Button>
+                  </>
+                )}
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 <Link to="/login">
                   <Button variant="ghost" className="rounded-full px-6">Sign In</Button>
                 </Link>
                 <Link to="/register">
-                  <Button className="rounded-full px-6">Get Started</Button>
+                  <Button className="rounded-full px-6 shadow-glow">Get Started</Button>
                 </Link>
               </div>
             )}
           </div>
-        </div>
-      </header>
-    );
-  }
 
-  return (
-    <header className="sticky top-0 z-50 bg-card/80 backdrop-blur-md border-b border-border/50">
-      <div className="container flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl gradient-warm flex items-center justify-center">
-            <Shield className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <span className="font-display font-bold text-lg text-foreground">EquityLens</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-1">
-          {navItems.map(item => (
-            <Link key={item.path} to={item.path}>
-              <Button
-                variant={location.pathname === item.path ? 'secondary' : 'ghost'}
-                size="sm"
-                className="gap-2 rounded-full"
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <ThemeToggle className="rounded-full" />
-          <NotificationCenter />
-          {user && (
-            <span className="hidden md:block text-sm text-muted-foreground">
-              {user.name}{' '}
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full ml-1">{user.role}</span>
-            </span>
-          )}
-          <Button variant="ghost" size="sm" onClick={() => { logout(); window.location.href = '/'; }}>
-            <LogOut className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden rounded-full" 
+            onClick={() => setMobileOpen(!mobileOpen)}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
         </div>
       </div>
 
+      {/* Mobile Navigation Menu */}
       {mobileOpen && (
-        <nav className="md:hidden border-t border-border/50 bg-card p-2">
-          {navItems.map(item => (
-            <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}>
-              <Button variant={location.pathname === item.path ? 'secondary' : 'ghost'} size="sm" className="w-full justify-start gap-2 mb-1 rounded-xl">
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-        </nav>
+        <div className="md:hidden animate-in slide-in-from-top duration-300 border-t border-border/10 bg-background/95 backdrop-blur-xl h-[calc(100vh-4rem)] overflow-y-auto">
+          <div className="container py-8 flex flex-col gap-6">
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4">Menu</span>
+              {(isDashboardRoute ? navItems : publicNav).map(item => {
+                const Icon = item.icon;
+                return (
+                  <Link 
+                    key={item.path} 
+                    to={item.path} 
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    <Button 
+                      variant={location.pathname === item.path ? 'secondary' : 'ghost'} 
+                      className="w-full justify-start gap-4 text-lg h-14 rounded-2xl px-4"
+                    >
+                      {Icon && <Icon className="w-5 h-5 text-primary" />}
+                      {item.label}
+                    </Button>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="h-px bg-border/10 mx-4" />
+
+            <div className="flex flex-col gap-3 px-4">
+              {user ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 p-3 bg-muted/20 rounded-2xl">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                      {user.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-bold">{user.name}</p>
+                      <p className="text-xs text-muted-foreground uppercase tracking-widest">{user.role}</p>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full h-12 rounded-xl gap-2"
+                    onClick={() => { logout(); setMobileOpen(false); window.location.href = '/'; }}
+                  >
+                    <LogOut className="w-4 h-4" /> Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <Link to="/login" className="w-full" onClick={() => setMobileOpen(false)}>
+                    <Button variant="outline" className="w-full h-12 rounded-xl">Sign In</Button>
+                  </Link>
+                  <Link to="/register" className="w-full" onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full h-12 rounded-xl shadow-glow">Get Started</Button>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </header>
   );

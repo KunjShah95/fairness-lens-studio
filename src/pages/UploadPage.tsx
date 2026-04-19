@@ -171,9 +171,9 @@ export function UploadPage() {
   };
 
   return (
-    <DashboardLayout title="Upload Dataset" subtitle="Upload your clinical data to begin fairness audits">
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+    <DashboardLayout title="Upload Dataset" subtitle="Securely audit your clinical data for bias">
+      <div className="grid lg:grid-cols-3 gap-8 px-4 sm:px-0">
+        <div className="lg:col-span-2 space-y-6">
           <Card className="card-warm border-border/20">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -230,17 +230,17 @@ export function UploadPage() {
 
               {file && columns.length > 0 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-foreground">Dataset Name</label>
-                      <Input placeholder="e.g., Healthcare Triage" value={datasetName} onChange={(e) => setDatasetName(e.target.value)} className="rounded-xl" />
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-foreground">Dataset Name</label>
+                      <Input placeholder="e.g., Healthcare Triage" value={datasetName} onChange={(e) => setDatasetName(e.target.value)} className="rounded-xl h-11" />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2 text-foreground">Label Column (Target) *</label>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-medium text-foreground">Label Column (Target) *</label>
                       <select
                         value={labelColumn}
                         onChange={(e) => setLabelColumn(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-border bg-card outline-none focus:ring-2 focus:ring-primary/30"
+                        className="w-full px-4 h-11 rounded-xl border border-border bg-card outline-none focus:ring-2 focus:ring-primary/30 text-sm"
                       >
                         <option value="">Select target variable...</option>
                         {columns.map(col => <option key={col} value={col}>{col}</option>)}

@@ -85,18 +85,19 @@ const LoginPage: React.FC = () => {
       <div className="fixed inset-0 -z-10 bg-background" />
 
       {/* Back button */}
-      <nav className="container py-6 relative z-10">
+      <nav className="container px-4 py-6 relative z-10">
         <div className="flex items-center justify-between">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            <span className="hidden sm:inline">Back to Home</span>
+            <span className="sm:hidden">Home</span>
           </Link>
           <ThemeToggle className="rounded-full" />
         </div>
       </nav>
 
       {/* Login Form */}
-      <div className="container max-w-md py-8 relative z-10">
+      <div className="container px-4 max-w-md py-8 relative z-10">
         <Card className="card-glass overflow-hidden">
           {/* Decorative header */}
           <div className="relative h-3 bg-gradient-to-r from-primary via-secondary to-accent" />
