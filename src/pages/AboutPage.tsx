@@ -19,14 +19,16 @@ const AboutPage: React.FC = () => {
       role: 'Founder & Full Stack Developer', 
       bio: 'Visionary behind EquityLens. Specialist in full-stack architecture and AI/ML system integrity.', 
       image: '/kunj.jpg',
-      objectPosition: 'center 15%'
+      objectPosition: 'center 15%',
+      linkedin: 'https://www.linkedin.com/in/kunjshah05'
     },
     { 
       name: 'Vidhya Mehta', 
       role: 'Co-founder', 
-      bio: 'Expert in Python and AI/ML architectures. Driving fairness through causal modeling.', 
+      bio: 'Expert in Python and AI/ML architectures. Driving fairness through causal modeling and algorithmic accountability.', 
       image: '/vidhya.jpeg',
-      objectPosition: 'center center'
+      objectPosition: 'center center',
+      linkedin: 'https://www.linkedin.com/in/vidhya-mehta-551a3836b/'
     },
   ];
 
@@ -135,7 +137,11 @@ const AboutPage: React.FC = () => {
                 <p className="text-sm font-bold text-primary mb-2 uppercase tracking-wider">{member.role}</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">{member.bio}</p>
                 <div className="flex items-center justify-center gap-4 mt-6">
-                  <Linkedin className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
+                  {member.linkedin && (
+                    <a href={member.linkedin} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors">
+                      <Linkedin className="w-5 h-5" />
+                    </a>
+                  )}
                   <Twitter className="w-5 h-5 text-muted-foreground cursor-pointer hover:text-primary transition-colors" />
                 </div>
               </CardContent>
