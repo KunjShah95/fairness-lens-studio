@@ -25,7 +25,7 @@ const AboutPage: React.FC = () => {
     { 
       name: 'Vidhya Mehta', 
       role: 'Co-founder', 
-      bio: 'Expert in Python and AI/ML architectures. Driving fairness through casual modeling and algorithmic accountability.', 
+      bio: 'Expert in Python and AI/ML architectures. Driving fairness through causal modeling and algorithmic accountability.', 
       image: '/vidhya.jpeg',
       objectPosition: 'center center',
       linkedin: 'https://www.linkedin.com/in/vidhya-mehta-551a3836b/'
