@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 import os
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 
 from app.config import settings
 from app.db.session import engine
@@ -133,15 +136,31 @@ async def health_check():
     }
 
 
-@app.get("/")
-async def root():
-    """Root endpoint with API info."""
-    return {
-        "name": "EquityLens API",
-        "version": "0.1.0",
-        "docs": "/docs",
-        "openapi": "/openapi.json",
-    }
+# Serve static files in production
+if os.path.exists("static"):
+    # First, try to serve files from static/assets
+    if os.path.exists("static/assets"):
+        app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        """Serve the frontend index.html for all non-API routes."""
+        # Check if requested path is a specific file in static directory
+        static_path = os.path.join("static", full_path)
+        if full_path and os.path.isfile(static_path):
+            return FileResponse(static_path)
+            
+        # Don't serve index.html for API or docs routes that reached here
+        if full_path.startswith("api/") or full_path == "docs" or full_path == "openapi.json":
+            return {"error": "Not Found"}
+            
+        # SPA fallback: return index.html for everything else
+        index_path = os.path.join("static", "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        
+        return {"error": "Frontend not found"}
+
 
 
 if __name__ == "__main__":

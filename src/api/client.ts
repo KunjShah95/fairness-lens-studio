@@ -1,6 +1,6 @@
 import type { JsonValue, MitigationType } from '@/lib/types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8001');
 
 export class ApiClient {
   private static headers = {
