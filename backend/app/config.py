@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     weaviate_url: str = "http://localhost:8080"
     weaviate_api_key: str = ""
 
+    # Multi-Provider Configuration
+    openrouter_api_key: str = ""
+    gemini_api_key: str = ""
+    anthropic_api_key: str = ""
+    huggingface_api_key: str = ""
+
     # Environment
     environment: str = "development"
 
