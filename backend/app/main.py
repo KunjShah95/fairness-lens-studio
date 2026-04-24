@@ -25,6 +25,7 @@ from app.routers import (
     reports,
     demo,
     drift,
+    nl_query,
 )
 
 # Configure logging
@@ -108,6 +109,7 @@ app.include_router(governance.router)
 app.include_router(reports.router)
 app.include_router(demo.router)
 app.include_router(drift.router)
+app.include_router(nl_query.router)
 
 from app.db.weaviate_client import weaviate_manager
 
@@ -149,18 +151,21 @@ if os.path.exists("static"):
         static_path = os.path.join("static", full_path)
         if full_path and os.path.isfile(static_path):
             return FileResponse(static_path)
-            
+
         # Don't serve index.html for API or docs routes that reached here
-        if full_path.startswith("api/") or full_path == "docs" or full_path == "openapi.json":
+        if (
+            full_path.startswith("api/")
+            or full_path == "docs"
+            or full_path == "openapi.json"
+        ):
             return {"error": "Not Found"}
-            
+
         # SPA fallback: return index.html for everything else
         index_path = os.path.join("static", "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        
-        return {"error": "Frontend not found"}
 
+        return {"error": "Frontend not found"}
 
 
 if __name__ == "__main__":
