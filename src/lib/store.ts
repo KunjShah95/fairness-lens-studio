@@ -174,6 +174,12 @@ interface AppState {
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
   addBiasAlert: (title: string, message: string) => void;
+  genieState: {
+    isOpen: boolean;
+    prompt: string | null;
+  };
+  triggerGenie: (prompt: string) => void;
+  closeGenie: () => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -233,6 +239,16 @@ export const useAppStore = create<AppState>()(
           ...s.notifications,
         ].slice(0, 20),
       })),
+      genieState: {
+        isOpen: false,
+        prompt: null,
+      },
+      triggerGenie: (prompt) => set({ 
+        genieState: { isOpen: true, prompt } 
+      }),
+      closeGenie: () => set({ 
+        genieState: { isOpen: false, prompt: null } 
+      }),
     }),
     { name: 'equitylens-store' }
   )

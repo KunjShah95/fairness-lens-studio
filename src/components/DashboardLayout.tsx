@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { NotificationCenter } from './NotificationCenter';
 import { ThemeToggle } from './ThemeToggle';
+import { GenieChat } from './GenieChat';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -151,6 +152,9 @@ export function DashboardLayout({ children, title, subtitle }: DashboardLayoutPr
           </div>
         </div>
       </main>
+
+      {/* EquityLens Genie Assistant */}
+      <GenieChat />
     </div>
   );
 }

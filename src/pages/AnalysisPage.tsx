@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { 
   AlertCircle, Loader, Zap, BarChart3, Brain, Scale, TrendingUp, Shield, 
-  AlertTriangle, CheckCircle, Activity, Fingerprint, Lock, GanttChart, ListChecks
+  AlertTriangle, CheckCircle, Activity, Fingerprint, Lock, GanttChart, ListChecks, Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -200,6 +200,10 @@ export function AnalysisPage() {
     );
   }
 
+  function triggerGenie(arg0: string): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <DashboardLayout title="Fairness Intelligence" subtitle={currentDataset?.name || 'Audit Protocol 01'}>
       <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -251,6 +255,17 @@ export function AnalysisPage() {
                         <Zap className="w-3.5 h-3.5 text-warning" />
                         <span>Proxies: {analysis.featureImportance?.filter(f => f.isProxy).length || 0}</span>
                       </div>
+                    </div>
+                    <div className="pt-2">
+                      <Button 
+                        onClick={() => triggerGenie("Can you analyze this conclusion and provide a more detailed breakdown of the risks and potential mitigation strategies?")}
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-full bg-primary/5 border-primary/20 hover:bg-primary/10 text-[10px] font-bold uppercase tracking-wider"
+                      >
+                        <Sparkles className="w-3 h-3 mr-2 text-primary" />
+                        Analyze with Genie
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -366,9 +381,19 @@ export function AnalysisPage() {
                     <p className="text-[10px] font-mono text-muted-foreground uppercase mb-1">{analysis.ai_insights?.compliance_frameworks?.eu_ai_act?.article || 'ARTICLE 10'}</p>
                     <p className="text-xs font-medium leading-relaxed">{analysis.ai_insights?.compliance_frameworks?.eu_ai_act?.requirement || 'Data and data governance: Ensure datasets are representative and free of bias.'}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                    <ListChecks className="w-3.5 h-3.5" />
-                    <span className="truncate">Technical Documentation Required: Annex IV Compliance</span>
+                  <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="w-3.5 h-3.5" />
+                      <span className="truncate">Technical Documentation Required: Annex IV Compliance</span>
+                    </div>
+                    <Button 
+                      onClick={() => triggerGenie("Provide a deep dive into the EU AI Act readiness for this model. What specific technical documentation is missing?")}
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-2 text-[8px] font-bold uppercase tracking-widest text-primary/60 hover:text-primary"
+                    >
+                      Deep Dive
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -425,8 +450,13 @@ export function AnalysisPage() {
                     <h4 className="font-bold text-sm group-hover:text-primary transition-colors">{rec.title}</h4>
                     <p className="text-xs text-muted-foreground leading-relaxed h-12 overflow-hidden">{rec.insight}</p>
                     <div className="pt-2">
-                      <Button variant="ghost" size="sm" className="w-full text-[10px] uppercase tracking-widest border border-dashed border-border/40 hover:border-primary/50 group-hover:bg-primary/5">
-                        Initialize Intervention
+                      <Button 
+                        onClick={() => triggerGenie(`Tell me more about this recommendation: "${rec.title}". How exactly should I implement it?`)}
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-[10px] uppercase tracking-widest border border-dashed border-border/40 hover:border-primary/50 group-hover:bg-primary/5"
+                      >
+                        Ask Genie
                       </Button>
                     </div>
                   </CardContent>
@@ -642,6 +672,12 @@ export function AnalysisPage() {
                       <p className="text-lg font-bold">92.1%</p>
                     </div>
                   </div>
+                  <Button 
+                    onClick={() => triggerGenie("Explain the counterfactual flip sensitivity metrics. Why is the decision flip probability significant here?")}
+                    className="w-full bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 text-[10px] font-bold uppercase tracking-widest"
+                  >
+                    Explain Counterfactuals
+                  </Button>
                 </div>
               </CardContent>
             </Card>
