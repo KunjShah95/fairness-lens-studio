@@ -63,6 +63,17 @@ async def lifespan(app: FastAPI):
     except Exception as exc:
         logger.warning(f"Drift scheduler initialization skipped: {exc}")
 
+    # Initialize AI services
+    try:
+        from app.services.cache_service import cache_service
+        from app.services.rate_limiter import rate_limiter
+
+        await cache_service.connect()
+        await rate_limiter.connect()
+        logger.info("AI services initialized")
+    except Exception as e:
+        logger.warning(f"AI services initialization skipped: {e}")
+
     yield
 
     # Shutdown logic
@@ -149,18 +160,21 @@ if os.path.exists("static"):
         static_path = os.path.join("static", full_path)
         if full_path and os.path.isfile(static_path):
             return FileResponse(static_path)
-            
+
         # Don't serve index.html for API or docs routes that reached here
-        if full_path.startswith("api/") or full_path == "docs" or full_path == "openapi.json":
+        if (
+            full_path.startswith("api/")
+            or full_path == "docs"
+            or full_path == "openapi.json"
+        ):
             return {"error": "Not Found"}
-            
+
         # SPA fallback: return index.html for everything else
         index_path = os.path.join("static", "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        
-        return {"error": "Frontend not found"}
 
+        return {"error": "Frontend not found"}
 
 
 if __name__ == "__main__":
