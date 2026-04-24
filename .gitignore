@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment files (never commit secrets)
+worktrees
 .env
 .env.*
 !.env.example
@@ -49,3 +49,4 @@ backend/.env.*
 /USER_TESTING.md
 /CONTEXT.md
 .worktrees/
+worktrees/
