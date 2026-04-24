@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     weaviate_url: str = "http://localhost:8080"
     weaviate_api_key: str = ""
 
+    # OpenAI Configuration
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
+    ai_rate_limit: int = 100
+    ai_rate_window: int = 86400
+
     # Environment
     environment: str = "development"
 
